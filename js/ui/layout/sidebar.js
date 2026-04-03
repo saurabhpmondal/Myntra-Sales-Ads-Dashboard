@@ -9,6 +9,9 @@ export function renderSidebar() {
         <div data-module="campaign">Campaign</div>
         <div data-module="placement">Placement</div>
         <div data-module="product">Daily Ads</div>
+        <div data-module="listings">Listings</div>
+        <div data-module="salesTrend">Traffic</div>
+        <div data-module="alerts">Alerts</div>
     `;
 
     el.querySelectorAll("[data-module]").forEach(item => {
