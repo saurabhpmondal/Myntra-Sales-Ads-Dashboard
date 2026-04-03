@@ -9,51 +9,6 @@
 }
 
 /* =========================
-   FILTER BAR (FIXED)
-========================= */
-.filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-/* LEFT BUTTONS */
-.filter-left {
-    display: flex;
-    gap: 10px;
-}
-
-/* RIGHT SECTION */
-.filter-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* INPUT */
-.filter-right input {
-    width: 140px;
-    padding: 8px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-}
-
-/* BUTTON */
-button {
-    padding: 8px 14px;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-    background: #ffffff;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #f3f4f6;
-}
-
-/* =========================
    KPI GRID
 ========================= */
 .kpi-grid {
@@ -70,6 +25,50 @@ button:hover {
 .kpi-card p {
     font-size: 20px;
     font-weight: 700;
+}
+
+/* =========================
+   FILTER BAR
+========================= */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.filter-left {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-right input {
+    width: 140px;
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
+
+/* =========================
+   BUTTON
+========================= */
+button {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #f3f4f6;
 }
 
 /* =========================
@@ -102,9 +101,43 @@ button:hover {
 }
 
 /* =========================
+   TABS (NEW — FULL INCLUDED)
+========================= */
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.tab {
+    padding: 10px 16px;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    background: #f3f4f6;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.tab:hover {
+    background: #e5e7eb;
+}
+
+.tab.active {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-bottom: none;
+    font-weight: 600;
+}
+
+/* =========================
    RESPONSIVE
 ========================= */
 @media (max-width: 768px) {
+
+    .chart-grid {
+        grid-template-columns: 1fr;
+    }
 
     .filter-bar {
         flex-direction: column;
@@ -113,9 +146,5 @@ button:hover {
 
     .filter-right {
         flex-wrap: wrap;
-    }
-
-    .chart-grid {
-        grid-template-columns: 1fr;
     }
 }
