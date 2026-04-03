@@ -89,3 +89,9 @@ input {
 .filter-right input {
     padding: 6px;
 }
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
