@@ -4,7 +4,15 @@ import { normalizeDataset } from "./core/normalizationService.js";
 import { setData } from "./core/stateManager.js";
 import { loadModule } from "./router/appRouter.js";
 
+import { renderSidebar } from "./ui/layout/sidebar.js";
+import { renderHeader } from "./ui/layout/header.js";
+import { renderFilters } from "./filters/ui.js";
+
 async function init() {
+
+    renderSidebar();
+    renderHeader();
+    renderFilters();
 
     const raw = await loadInitialData();
 
