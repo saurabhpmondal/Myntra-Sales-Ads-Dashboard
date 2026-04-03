@@ -68,3 +68,24 @@ input {
     margin-bottom: 10px;
     width: 250px;
 }
+
+/* FILTER BAR */
+.filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.filter-left button {
+    margin-right: 8px;
+}
+
+.filter-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-right input {
+    padding: 6px;
+}
