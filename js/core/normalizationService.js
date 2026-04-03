@@ -7,10 +7,10 @@ function toNumber(value) {
     return isNaN(num) ? 0 : num;
 }
 
-// 🔥 SALES DATE FROM "date" COLUMN (DD-MM-YYYY)
+// 🔥 FINAL SIMPLE SALES DATE PARSER
 function buildSalesDate(row) {
 
-    const raw = row["date"];
+    const raw = row["date"]; // 01-03-2026
 
     if (!raw) return null;
 
@@ -51,7 +51,7 @@ export function normalizeDataset(name, data) {
             }
         }
 
-        // 🔥 DATE HANDLING FIXED
+        // 🔥 DATE HANDLING
         if (name === "SALES") {
             obj.date = buildSalesDate(row);
         } else {
