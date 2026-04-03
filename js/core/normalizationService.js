@@ -7,18 +7,23 @@ function toNumber(value) {
     return isNaN(num) ? 0 : num;
 }
 
-// 🔥 STRICT SALES DATE BUILDER
+// 🔥 SAFE DATE BUILDER (FIXED PROPERLY)
 function buildSalesDate(row) {
 
-    const day = Number(row["day"]);
-    const month = Number(row["month"]);
-    const year = Number(row["year"]);
+    const dayRaw = row["day"];
+    const monthRaw = row["month"];
+    const yearRaw = row["year"];
 
-    // ❗ reject invalid rows
+    if (!dayRaw || !monthRaw || !yearRaw) return null;
+
+    const day = String(dayRaw).trim();
+    const month = String(monthRaw).trim();
+    const year = String(yearRaw).trim();
+
     if (!day || !month || !year) return null;
 
-    const d = String(day).padStart(2, "0");
-    const m = String(month).padStart(2, "0");
+    const d = day.padStart(2, "0");
+    const m = month.padStart(2, "0");
 
     return `${year}-${m}-${d}`;
 }
@@ -49,7 +54,7 @@ export function normalizeDataset(name, data) {
             }
         }
 
-        // 🔥 DATE HANDLING
+        // 🔥 DATE FIX
         if (name === "SALES") {
             obj.date = buildSalesDate(row);
         } else {
