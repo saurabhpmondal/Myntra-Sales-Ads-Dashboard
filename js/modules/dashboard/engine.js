@@ -6,32 +6,40 @@ export function buildDashboard() {
     const ads = getData("CDR");
 
     let gmv = 0, units = 0;
+    const dailySales = {};
 
     sales.forEach(r => {
-        gmv += r.revenue || 0;
-        units += r.units || 0;
+        gmv += r.revenue;
+        units += r.units;
+
+        if (!dailySales[r.date]) dailySales[r.date] = 0;
+        dailySales[r.date] += r.revenue;
     });
 
-    let spend = 0, revenue = 0, clicks = 0, impressions = 0;
+    let spend = 0, revenue = 0;
+    const dailyAds = {};
 
     ads.forEach(r => {
-        spend += r.spend || 0;
-        revenue += r.revenue || 0;
-        clicks += r.clicks || 0;
-        impressions += r.impressions || 0;
+        spend += r.spend;
+        revenue += r.revenue;
+
+        if (!dailyAds[r.date]) dailyAds[r.date] = { spend: 0, revenue: 0 };
+
+        dailyAds[r.date].spend += r.spend;
+        dailyAds[r.date].revenue += r.revenue;
     });
 
     return {
-        sales: {
+        kpi: {
             gmv,
             units,
-            asp: units ? gmv / units : 0
-        },
-        ads: {
+            asp: units ? gmv / units : 0,
             spend,
-            revenue,
-            ctr: impressions ? clicks / impressions : 0,
-            roi: spend ? revenue / spend : 0
+            revenue
+        },
+        charts: {
+            sales: dailySales,
+            ads: dailyAds
         }
     };
 }
