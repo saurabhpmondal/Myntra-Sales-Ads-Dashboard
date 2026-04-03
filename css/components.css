@@ -137,3 +137,20 @@ input {
         flex-wrap: wrap;
     }
 }
+
+.alert {
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.alert.danger {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.alert.warning {
+    background: #fef3c7;
+    color: #92400e;
+}
