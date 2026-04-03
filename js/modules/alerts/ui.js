@@ -4,8 +4,13 @@ export function renderAlerts(alerts) {
 
     content.innerHTML = `
         <div class="card">
-            <h2>Alerts</h2>
-            ${alerts.map(a => `<p>${a}</p>`).join("")}
+            <h3>Alerts</h3>
+
+            ${alerts.map(a => `
+                <div class="alert ${a.type}">
+                    ${a.msg}
+                </div>
+            `).join("")}
         </div>
     `;
 }
