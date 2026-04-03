@@ -1,0 +1,31 @@
+.card {
+    background: var(--bg-card);
+    padding: 16px;
+    border-radius: var(--radius);
+}
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.kpi-card h3 {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.kpi-card p {
+    font-size: 22px;
+    margin-top: 6px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th, .table td {
+    padding: 10px;
+    text-align: left;
+}
