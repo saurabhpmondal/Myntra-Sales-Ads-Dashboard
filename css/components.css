@@ -2,71 +2,51 @@
    CARD
 ========================= */
 .card {
-    background: var(--bg-card);
-    padding: 18px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
 }
 
 /* =========================
-   KPI GRID
-========================= */
-.kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-}
-
-/* KPI CARD */
-.kpi-card {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.kpi-card h3 {
-    font-size: 13px;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-
-.kpi-card p {
-    font-size: 24px;
-    font-weight: 700;
-}
-
-/* =========================
-   FILTER BAR
+   FILTER BAR (FIXED)
 ========================= */
 .filter-bar {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
 }
 
-/* left buttons */
-.filter-left button {
-    margin-right: 8px;
+/* LEFT BUTTONS */
+.filter-left {
+    display: flex;
+    gap: 10px;
 }
 
-/* right date section */
+/* RIGHT SECTION */
 .filter-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
-/* =========================
-   BUTTON
-========================= */
-button {
-    background: white;
-    border: 1px solid var(--border);
-    padding: 6px 12px;
+/* INPUT */
+.filter-right input {
+    width: 140px;
+    padding: 8px;
+    border: 1px solid #d1d5db;
     border-radius: 6px;
+}
+
+/* BUTTON */
+button {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
     cursor: pointer;
-    font-size: 13px;
 }
 
 button:hover {
@@ -74,13 +54,31 @@ button:hover {
 }
 
 /* =========================
-   INPUT
+   KPI GRID
 ========================= */
-input {
-    padding: 6px 8px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: 13px;
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+}
+
+.kpi-card h3 {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.kpi-card p {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+/* =========================
+   CHART GRID
+========================= */
+.chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
 }
 
 /* =========================
@@ -94,63 +92,30 @@ input {
 .table th {
     text-align: left;
     font-size: 12px;
-    color: var(--text-secondary);
+    color: #6b7280;
     padding: 10px;
-    border-bottom: 1px solid var(--border);
 }
 
 .table td {
-    padding: 12px 10px;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-}
-
-.table tr:hover {
-    background: #f9fafb;
+    padding: 10px;
+    border-top: 1px solid #e5e7eb;
 }
 
 /* =========================
-   CHART GRID
+   RESPONSIVE
 ========================= */
-.chart-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-/* =========================
-   RESPONSIVE (IMPORTANT)
-========================= */
-@media (max-width: 900px) {
-
-    .chart-grid {
-        grid-template-columns: 1fr;
-    }
+@media (max-width: 768px) {
 
     .filter-bar {
         flex-direction: column;
         align-items: flex-start;
-        gap: 10px;
     }
 
     .filter-right {
         flex-wrap: wrap;
     }
-}
 
-.alert {
-    padding: 10px;
-    margin-bottom: 8px;
-    border-radius: 6px;
-    font-size: 13px;
-}
-
-.alert.danger {
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-.alert.warning {
-    background: #fef3c7;
-    color: #92400e;
+    .chart-grid {
+        grid-template-columns: 1fr;
+    }
 }
