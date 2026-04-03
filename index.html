@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -19,26 +22,24 @@
 <div id="app">
 
     <!-- Sidebar -->
-    <div id="sidebar"></div>
+    <aside id="sidebar"></aside>
 
-    <!-- Main Area -->
+    <!-- Main -->
     <div class="main">
 
-        <!-- Header -->
-        <div id="header"></div>
+        <header id="header"></header>
 
-        <!-- Filters -->
-        <div id="filters"></div>
+        <section id="filters"></section>
 
-        <!-- Content -->
-        <div id="content"></div>
+        <main id="content"></main>
 
     </div>
 
 </div>
 
-<!-- App Entry -->
-<script type="module" src="js/main.js"></script>
+<!-- ✅ CORRECT ENTRY FILE -->
+<script type="module" src="js/app.js"></script>
 
 </body>
+
 </html>
