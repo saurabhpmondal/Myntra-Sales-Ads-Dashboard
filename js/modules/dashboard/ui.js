@@ -1,24 +1,25 @@
 import { renderLineChart } from "../../ui/components/charts/lineChart.js";
-import { loadModule } from "../../router/appRouter.js";
 
 export function renderDashboard(data) {
 
     const content = document.getElementById("content");
 
-    content.innerHTML = `
+    if (!data) {
+        content.innerHTML = "<p>No data available</p>";
+        return;
+    }
 
-        <!-- KPI -->
+    content.innerHTML = `
         <div class="kpi-grid">
-            <div class="card kpi-card"><h3>GMV</h3><p>${data.kpi.gmv.toLocaleString()}</p></div>
-            <div class="card kpi-card"><h3>Units</h3><p>${data.kpi.units}</p></div>
-            <div class="card kpi-card"><h3>ASP</h3><p>${data.kpi.asp.toFixed(2)}</p></div>
-            <div class="card kpi-card"><h3>Spend</h3><p>${data.kpi.spend.toLocaleString()}</p></div>
-            <div class="card kpi-card"><h3>Revenue</h3><p>${data.kpi.revenue.toLocaleString()}</p></div>
-            <div class="card kpi-card"><h3>CTR</h3><p>${(data.kpi.ctr*100).toFixed(2)}%</p></div>
-            <div class="card kpi-card"><h3>ROI</h3><p>${data.kpi.roi.toFixed(2)}</p></div>
+            <div class="card kpi-card"><h3>GMV</h3><p>${format(data.kpi.gmv)}</p></div>
+            <div class="card kpi-card"><h3>Units</h3><p>${format(data.kpi.units)}</p></div>
+            <div class="card kpi-card"><h3>ASP</h3><p>${format(data.kpi.asp)}</p></div>
+            <div class="card kpi-card"><h3>Spend</h3><p>${format(data.kpi.spend)}</p></div>
+            <div class="card kpi-card"><h3>Revenue</h3><p>${format(data.kpi.revenue)}</p></div>
+            <div class="card kpi-card"><h3>CTR</h3><p>${percent(data.kpi.ctr)}</p></div>
+            <div class="card kpi-card"><h3>ROI</h3><p>${format(data.kpi.roi)}</p></div>
         </div>
 
-        <!-- Charts -->
         <div class="chart-grid">
             <div class="card">
                 <h3>Sales Trend</h3>
@@ -30,7 +31,6 @@ export function renderDashboard(data) {
             </div>
         </div>
 
-        <!-- Brand Table -->
         <div class="card">
             <h3>Brand Performance</h3>
             <table class="table">
@@ -46,63 +46,68 @@ export function renderDashboard(data) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${Object.entries(data.brandMap).map(([b,v])=>`
-                        <tr>
-                            <td>${b}</td>
-                            <td>${v.gmv.toFixed(0)}</td>
-                            <td>${v.units}</td>
-                            <td>${(v.gmv/v.units||0).toFixed(2)}</td>
-                            <td>${v.PPMP.toFixed(0)}</td>
-                            <td>${v.SJIT.toFixed(0)}</td>
-                            <td>${v.SOR.toFixed(0)}</td>
-                        </tr>
-                    `).join("")}
+                    ${buildBrandRows(data.brandMap)}
                 </tbody>
             </table>
         </div>
-
-        <!-- TABS -->
-        <div class="tabs">
-            <div class="tab" data-tab="campaign">Campaign</div>
-            <div class="tab" data-tab="placement">Placement</div>
-            <div class="tab" data-tab="product">Daily Ads</div>
-            <div class="tab" data-tab="listings">Listings</div>
-            <div class="tab" data-tab="salesTrend">Traffic</div>
-            <div class="tab" data-tab="alerts">Alerts</div>
-        </div>
-
-        <div id="reportContainer"></div>
     `;
 
-    // Charts
-    const salesLabels = Object.keys(data.charts.sales);
-    const salesData = Object.values(data.charts.sales);
-    renderLineChart("salesChart", salesLabels, salesData, [], "Sales", "");
-
-    const adsLabels = Object.keys(data.charts.ads);
-    const spend = adsLabels.map(d => data.charts.ads[d].spend);
-    const rev = adsLabels.map(d => data.charts.ads[d].revenue);
-    renderLineChart("adsChart", adsLabels, spend, rev, "Spend", "Revenue");
-
-    initTabs();
+    renderCharts(data);
 }
 
-function initTabs() {
+/* ---------- HELPERS ---------- */
 
-    const tabs = document.querySelectorAll(".tab");
+function renderCharts(data) {
 
-    tabs.forEach(tab => {
+    // SALES
+    const salesLabels = Object.keys(data.charts.sales || {});
+    const salesData = Object.values(data.charts.sales || {});
 
-        tab.onclick = () => {
+    renderLineChart(
+        "salesChart",
+        salesLabels,
+        salesData,
+        [],
+        "Sales",
+        ""
+    );
 
-            tabs.forEach(t => t.classList.remove("active"));
-            tab.classList.add("active");
+    // ADS
+    const adsLabels = Object.keys(data.charts.ads || {});
+    const spend = adsLabels.map(d => data.charts.ads[d]?.spend || 0);
+    const revenue = adsLabels.map(d => data.charts.ads[d]?.revenue || 0);
 
-            const module = tab.dataset.tab;
+    renderLineChart(
+        "adsChart",
+        adsLabels,
+        spend,
+        revenue,
+        "Spend",
+        "Revenue"
+    );
+}
 
-            loadModule(module, "reportContainer");
-        };
-    });
+function buildBrandRows(map = {}) {
 
-    // ❌ NO AUTO LOAD HERE
+    return Object.entries(map).map(([brand, v]) => `
+        <tr>
+            <td>${brand}</td>
+            <td>${format(v.gmv)}</td>
+            <td>${format(v.units)}</td>
+            <td>${format(v.units ? v.gmv / v.units : 0)}</td>
+            <td>${format(v.PPMP)}</td>
+            <td>${format(v.SJIT)}</td>
+            <td>${format(v.SOR)}</td>
+        </tr>
+    `).join("");
+}
+
+function format(val) {
+    if (!val && val !== 0) return "0";
+    return Number(val).toLocaleString();
+}
+
+function percent(val) {
+    if (!val && val !== 0) return "0%";
+    return (val * 100).toFixed(2) + "%";
 }
