@@ -1,54 +1,24 @@
-/* APP LAYOUT */
 #app {
     display: flex;
-    height: 100vh;
-    overflow: hidden;
-    background: #f9fafb;
+    min-height: 100vh;
 }
 
-/* SIDEBAR */
+/* Sidebar stable */
 #sidebar {
-    width: 240px;
-    min-width: 240px;
-    background: #ffffff;
-    border-right: 1px solid var(--border);
-    padding: 20px 16px;
-
-    display: flex;
-    flex-direction: column;
-
-    height: 100vh;
-    overflow-y: auto;
+    width: 220px;
+    min-width: 220px;
 }
 
-/* MAIN */
+/* Main full width */
 .main {
     flex: 1;
     display: flex;
     flex-direction: column;
-    height: 100vh;
 }
 
-/* HEADER */
-#header {
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border);
-    background: #ffffff;
-}
-
-/* FILTER */
-#filters {
-    padding: 12px 24px;
-    border-bottom: 1px solid var(--border);
-    background: #ffffff;
-}
-
-/* CONTENT */
+/* Content */
 #content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 24px;
-
+    padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 20px;
