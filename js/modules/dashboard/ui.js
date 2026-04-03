@@ -1,4 +1,5 @@
 import { renderLineChart } from "../../ui/components/charts/lineChart.js";
+import { loadModule } from "../../router/appRouter.js";
 
 export function renderDashboard(data) {
 
@@ -6,8 +7,8 @@ export function renderDashboard(data) {
 
     content.innerHTML = `
 
+        <!-- KPI -->
         <div class="kpi-grid">
-
             <div class="card kpi-card"><h3>GMV</h3><p>${data.kpi.gmv.toLocaleString()}</p></div>
             <div class="card kpi-card"><h3>Units</h3><p>${data.kpi.units}</p></div>
             <div class="card kpi-card"><h3>ASP</h3><p>${data.kpi.asp.toFixed(2)}</p></div>
@@ -15,23 +16,21 @@ export function renderDashboard(data) {
             <div class="card kpi-card"><h3>Revenue</h3><p>${data.kpi.revenue.toLocaleString()}</p></div>
             <div class="card kpi-card"><h3>CTR</h3><p>${(data.kpi.ctr*100).toFixed(2)}%</p></div>
             <div class="card kpi-card"><h3>ROI</h3><p>${data.kpi.roi.toFixed(2)}</p></div>
-
         </div>
 
+        <!-- Charts -->
         <div class="chart-grid">
-
             <div class="card">
                 <h3>Sales Trend</h3>
                 <canvas id="salesChart"></canvas>
             </div>
-
             <div class="card">
                 <h3>Ads Trend</h3>
                 <canvas id="adsChart"></canvas>
             </div>
-
         </div>
 
+        <!-- Brand Table -->
         <div class="card">
             <h3>Brand Performance</h3>
             <table class="table">
@@ -61,17 +60,55 @@ export function renderDashboard(data) {
                 </tbody>
             </table>
         </div>
+
+        <!-- REPORT TABS -->
+        <div class="tabs">
+
+            <div class="tab active" data-tab="campaign">Campaign</div>
+            <div class="tab" data-tab="placement">Placement</div>
+            <div class="tab" data-tab="product">Daily Ads</div>
+            <div class="tab" data-tab="listings">Listings</div>
+            <div class="tab" data-tab="salesTrend">Traffic</div>
+            <div class="tab" data-tab="alerts">Alerts</div>
+
+        </div>
+
+        <!-- REPORT CONTAINER -->
+        <div id="reportContainer"></div>
     `;
 
-    // charts
+    // Charts
     const salesLabels = Object.keys(data.charts.sales);
     const salesData = Object.values(data.charts.sales);
-
     renderLineChart("salesChart", salesLabels, salesData, [], "Sales", "");
 
     const adsLabels = Object.keys(data.charts.ads);
     const spend = adsLabels.map(d => data.charts.ads[d].spend);
     const rev = adsLabels.map(d => data.charts.ads[d].revenue);
-
     renderLineChart("adsChart", adsLabels, spend, rev, "Spend", "Revenue");
+
+    // Tabs logic
+    initTabs();
+}
+
+function initTabs() {
+
+    const tabs = document.querySelectorAll(".tab");
+
+    tabs.forEach(tab => {
+
+        tab.onclick = () => {
+
+            tabs.forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+
+            const module = tab.dataset.tab;
+
+            // Load module into container
+            loadModule(module, "reportContainer");
+        };
+    });
+
+    // Default load
+    loadModule("campaign", "reportContainer");
 }
