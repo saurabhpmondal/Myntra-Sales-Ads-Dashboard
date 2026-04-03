@@ -18,10 +18,13 @@ export function buildDashboard() {
 
     sales.forEach(r => {
 
+        // ❗ skip invalid dates
+        if (!r.date || r.date === "null") return;
+
         gmv += r.revenue;
         units += r.units;
 
-        // brand aggregation
+        // brand
         if (!brandMap[r.brand]) {
             brandMap[r.brand] = {
                 gmv: 0,
@@ -39,7 +42,7 @@ export function buildDashboard() {
             brandMap[r.brand][r.po_type] += r.revenue;
         }
 
-        // daily
+        // daily aggregation
         if (!dailySales[r.date]) dailySales[r.date] = 0;
         dailySales[r.date] += r.revenue;
     });
@@ -49,6 +52,8 @@ export function buildDashboard() {
     const dailyAds = {};
 
     ads.forEach(r => {
+
+        if (!r.date) return;
 
         spend += r.spend;
         revenue += r.revenue;
@@ -73,8 +78,28 @@ export function buildDashboard() {
         },
         brandMap,
         charts: {
-            sales: dailySales,
-            ads: dailyAds
+            sales: sortByDate(dailySales),
+            ads: sortByDateObj(dailyAds)
         }
     };
+}
+
+// 🔥 SORTING FUNCTIONS (CRITICAL)
+
+function sortByDate(obj) {
+    return Object.keys(obj)
+        .sort((a, b) => new Date(a) - new Date(b))
+        .reduce((acc, key) => {
+            acc[key] = obj[key];
+            return acc;
+        }, {});
+}
+
+function sortByDateObj(obj) {
+    return Object.keys(obj)
+        .sort((a, b) => new Date(a) - new Date(b))
+        .reduce((acc, key) => {
+            acc[key] = obj[key];
+            return acc;
+        }, {});
 }
