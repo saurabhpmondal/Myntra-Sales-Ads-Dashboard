@@ -7,6 +7,19 @@ function toNumber(value) {
     return isNaN(num) ? 0 : num;
 }
 
+function buildSalesDate(row) {
+    const day = row["day"];
+    const month = row["month"];
+    const year = row["year"];
+
+    if (!day || !month || !year) return null;
+
+    const d = String(day).padStart(2, "0");
+    const m = String(month).padStart(2, "0");
+
+    return `${year}-${m}-${d}`;
+}
+
 export function normalizeDataset(name, data) {
 
     const mapping = COLUMN_MAPPING[name];
@@ -20,7 +33,6 @@ export function normalizeDataset(name, data) {
 
             const raw = row[mapping[key]];
 
-            // Force numeric for known metrics
             if (
                 key === "impressions" ||
                 key === "clicks" ||
@@ -34,7 +46,12 @@ export function normalizeDataset(name, data) {
             }
         }
 
-        obj.date = normalizeDate(row[config.dateField], config.dateFormat);
+        // 🔥 SPECIAL HANDLING FOR SALES
+        if (name === "SALES") {
+            obj.date = buildSalesDate(row);
+        } else {
+            obj.date = normalizeDate(row[config.dateField], config.dateFormat);
+        }
 
         return obj;
     });
