@@ -7,22 +7,38 @@ function toNumber(value) {
     return isNaN(num) ? 0 : num;
 }
 
-// 🔥 FINAL SIMPLE SALES DATE PARSER
+// 🔥 MONTH MAP (CLEAN + FIXED)
+const MONTH_MAP = {
+    JAN: "01",
+    FEB: "02",
+    MAR: "03",
+    APR: "04",
+    MAY: "05",
+    JUN: "06",
+    JUL: "07",
+    AUG: "08",
+    SEP: "09",
+    OCT: "10",
+    NOV: "11",
+    DEC: "12"
+};
+
+// 🔥 FINAL SALES DATE BUILDER (NO SPLIT, NO CREATED ON)
 function buildSalesDate(row) {
 
-    const raw = row["date"]; // 01-03-2026
+    const day = String(row["date"]).trim();
+    const monthRaw = String(row["month"]).trim().toUpperCase();
+    const year = String(row["year"]).trim();
 
-    if (!raw) return null;
+    if (!day || !monthRaw || !year) return null;
 
-    const parts = String(raw).trim().split("-");
+    const month = MONTH_MAP[monthRaw];
 
-    if (parts.length !== 3) return null;
+    if (!month) return null;
 
-    const [dd, mm, yyyy] = parts;
+    const d = day.padStart(2, "0");
 
-    if (!dd || !mm || !yyyy) return null;
-
-    return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+    return `${year}-${month}-${d}`;
 }
 
 export function normalizeDataset(name, data) {
@@ -51,7 +67,7 @@ export function normalizeDataset(name, data) {
             }
         }
 
-        // 🔥 DATE HANDLING
+        // 🔥 DATE HANDLING (FINAL CORRECT)
         if (name === "SALES") {
             obj.date = buildSalesDate(row);
         } else {
