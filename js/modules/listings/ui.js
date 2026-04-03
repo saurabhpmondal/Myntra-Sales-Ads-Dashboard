@@ -1,9 +1,16 @@
+let fullData = [];
+let visible = 50;
+
 export function renderListings(data) {
+
+    fullData = data;
+    visible = 50;
 
     const content = document.getElementById("content");
 
     content.innerHTML = `
         <div class="card">
+
             <input id="searchBox" placeholder="Search style ID..." />
 
             <table class="table">
@@ -20,25 +27,30 @@ export function renderListings(data) {
                 </thead>
                 <tbody id="listingBody"></tbody>
             </table>
+
+            <button id="loadMore">Load More</button>
+
         </div>
     `;
 
-    renderRows(data);
+    renderRows();
+
+    document.getElementById("loadMore").onclick = () => {
+        visible += 50;
+        renderRows();
+    };
 
     document.getElementById("searchBox").oninput = (e) => {
         const val = e.target.value.toLowerCase();
-
-        const filtered = data.filter(d =>
-            d.style.toLowerCase().includes(val)
-        );
-
-        renderRows(filtered);
+        fullData = data.filter(d => d.style.includes(val));
+        visible = 50;
+        renderRows();
     };
 }
 
-function renderRows(data) {
+function renderRows() {
 
-    const rows = data.map(r => `
+    const rows = fullData.slice(0, visible).map(r => `
         <tr>
             <td>${r.style}</td>
             <td>${r.brand}</td>
