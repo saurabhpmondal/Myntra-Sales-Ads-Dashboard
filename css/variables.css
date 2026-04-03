@@ -1,0 +1,12 @@
+:root {
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+
+    --green: #22c55e;
+    --red: #ef4444;
+    --blue: #3b82f6;
+
+    --radius: 12px;
+}
