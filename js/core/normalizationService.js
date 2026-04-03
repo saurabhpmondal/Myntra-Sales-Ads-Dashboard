@@ -7,25 +7,22 @@ function toNumber(value) {
     return isNaN(num) ? 0 : num;
 }
 
-// 🔥 SAFE DATE BUILDER (FIXED PROPERLY)
+// 🔥 SALES DATE FROM "date" COLUMN (DD-MM-YYYY)
 function buildSalesDate(row) {
 
-    const dayRaw = row["day"];
-    const monthRaw = row["month"];
-    const yearRaw = row["year"];
+    const raw = row["date"];
 
-    if (!dayRaw || !monthRaw || !yearRaw) return null;
+    if (!raw) return null;
 
-    const day = String(dayRaw).trim();
-    const month = String(monthRaw).trim();
-    const year = String(yearRaw).trim();
+    const parts = String(raw).trim().split("-");
 
-    if (!day || !month || !year) return null;
+    if (parts.length !== 3) return null;
 
-    const d = day.padStart(2, "0");
-    const m = month.padStart(2, "0");
+    const [dd, mm, yyyy] = parts;
 
-    return `${year}-${m}-${d}`;
+    if (!dd || !mm || !yyyy) return null;
+
+    return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
 }
 
 export function normalizeDataset(name, data) {
@@ -54,7 +51,7 @@ export function normalizeDataset(name, data) {
             }
         }
 
-        // 🔥 DATE FIX
+        // 🔥 DATE HANDLING FIXED
         if (name === "SALES") {
             obj.date = buildSalesDate(row);
         } else {
