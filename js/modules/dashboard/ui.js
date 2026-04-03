@@ -61,19 +61,16 @@ export function renderDashboard(data) {
             </table>
         </div>
 
-        <!-- REPORT TABS -->
+        <!-- TABS -->
         <div class="tabs">
-
-            <div class="tab active" data-tab="campaign">Campaign</div>
+            <div class="tab" data-tab="campaign">Campaign</div>
             <div class="tab" data-tab="placement">Placement</div>
             <div class="tab" data-tab="product">Daily Ads</div>
             <div class="tab" data-tab="listings">Listings</div>
             <div class="tab" data-tab="salesTrend">Traffic</div>
             <div class="tab" data-tab="alerts">Alerts</div>
-
         </div>
 
-        <!-- REPORT CONTAINER -->
         <div id="reportContainer"></div>
     `;
 
@@ -87,7 +84,6 @@ export function renderDashboard(data) {
     const rev = adsLabels.map(d => data.charts.ads[d].revenue);
     renderLineChart("adsChart", adsLabels, spend, rev, "Spend", "Revenue");
 
-    // Tabs logic
     initTabs();
 }
 
@@ -104,11 +100,9 @@ function initTabs() {
 
             const module = tab.dataset.tab;
 
-            // Load module into container
             loadModule(module, "reportContainer");
         };
     });
 
-    // Default load
-    loadModule("campaign", "reportContainer");
+    // ❌ NO AUTO LOAD HERE
 }
