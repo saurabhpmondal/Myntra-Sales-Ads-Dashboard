@@ -1,59 +1,55 @@
+/* APP LAYOUT */
+#app {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* SIDEBAR */
 #sidebar {
     width: 240px;
+    min-width: 240px;
     background: #ffffff;
     border-right: 1px solid var(--border);
     padding: 20px 16px;
+
     display: flex;
     flex-direction: column;
+
+    height: 100vh;
+    overflow-y: auto;
 }
 
-/* Title */
-#sidebar h2 {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 24px;
-    padding-left: 6px;
-}
-
-/* Nav container */
-.nav-item {
+/* MAIN AREA */
+.main {
+    flex: 1;
     display: flex;
-    align-items: center;
-    gap: 10px;
-
-    padding: 12px 14px;
-    border-radius: 10px;
-    margin-bottom: 6px;
-
-    cursor: pointer;
-    transition: all 0.2s ease;
-
-    color: var(--text-secondary);
-    font-size: 14px;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
 }
 
-/* Hover */
-.nav-item:hover {
-    background: #f3f4f6;
-    color: var(--text-primary);
+/* HEADER */
+#header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: #fff;
 }
 
-/* Active */
-.nav-item.active {
-    background: #eef2ff;
-    color: #1d4ed8;
-    font-weight: 600;
-    position: relative;
+/* FILTER */
+#filters {
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border);
+    background: #fff;
 }
 
-/* Active left indicator */
-.nav-item.active::before {
-    content: "";
-    position: absolute;
-    left: -16px;
-    top: 8px;
-    bottom: 8px;
-    width: 4px;
-    border-radius: 4px;
-    background: #2563eb;
+/* CONTENT */
+#content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
