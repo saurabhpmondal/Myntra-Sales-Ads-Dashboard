@@ -1,6 +1,7 @@
 import { renderLineChart } from "../../ui/components/charts/lineChart.js";
 import { runCampaign } from "../campaign/binder.js";
 import { runDailyAds } from "../product/binder.js";
+import { runPlacement } from "../placement/binder.js";
 
 export function renderDashboard(data) {
 
@@ -11,31 +12,22 @@ export function renderDashboard(data) {
     content.innerHTML = `
         <div class="dashboard">
 
-            <!-- KPI GRID -->
             <div class="kpi-grid">
-
-                <!-- SALES -->
                 ${kpi("GMV", fmt(k.gmv))}
                 ${kpi("Units", fmt(k.units))}
                 ${kpi("ASP", fmt2(k.asp))}
-
-                <!-- ADS -->
                 ${kpi("Spend", fmt(k.spend))}
                 ${kpi("Revenue", fmt(k.revenue))}
                 ${kpi("ROI", fmt2(k.roi))}
-
             </div>
 
-            <!-- SALES TREND -->
             <div class="card">
                 <h3>Sales Trend</h3>
                 <canvas id="salesChart"></canvas>
             </div>
 
-            <!-- BRAND PERFORMANCE -->
             <div class="card table-card">
                 <h3>Brand Performance</h3>
-
                 <div class="table-wrapper">
                     <table class="table">
                         <thead>
@@ -56,7 +48,6 @@ export function renderDashboard(data) {
                 </div>
             </div>
 
-            <!-- REPORT TABS -->
             <div class="tabs">
                 ${tab("campaign","Campaign",true)}
                 ${tab("placement","Placement")}
@@ -66,7 +57,6 @@ export function renderDashboard(data) {
                 ${tab("alerts","Alerts")}
             </div>
 
-            <!-- REPORT CONTAINER -->
             <div id="reportContainer" class="card"></div>
 
         </div>
@@ -76,32 +66,23 @@ export function renderDashboard(data) {
     initTabs();
 }
 
-/* ---------- CHART ---------- */
-
 function renderCharts(data) {
-
     const labels = Object.keys(data.charts?.sales || {});
     const values = Object.values(data.charts?.sales || {});
-
     renderLineChart("salesChart", labels, values, [], "Sales", "");
 }
 
-/* ---------- TABS ---------- */
-
 function initTabs(){
-
     const tabs = document.querySelectorAll(".tab");
 
     tabs.forEach(tab=>{
         tab.onclick = ()=>{
             tabs.forEach(t=>t.classList.remove("active"));
             tab.classList.add("active");
-
             renderReport(tab.dataset.type);
         };
     });
 
-    // DEFAULT LOAD
     renderReport("campaign");
 }
 
@@ -109,6 +90,11 @@ function renderReport(type){
 
     if (type === "campaign") {
         runCampaign();
+        return;
+    }
+
+    if (type === "placement") {
+        runPlacement();
         return;
     }
 
@@ -121,15 +107,8 @@ function renderReport(type){
         `<div style="padding:20px">${type.toUpperCase()} coming next</div>`;
 }
 
-/* ---------- HELPERS ---------- */
-
 function kpi(title, value){
-    return `
-        <div class="kpi-card">
-            <h3>${title}</h3>
-            <p>${value}</p>
-        </div>
-    `;
+    return `<div class="kpi-card"><h3>${title}</h3><p>${value}</p></div>`;
 }
 
 function tab(id, name, active=false){
@@ -149,8 +128,6 @@ function brandRows(map={}){
         </tr>
     `).join("");
 }
-
-/* ---------- FORMAT ---------- */
 
 function fmt(n){ return Number(n||0).toLocaleString(); }
 function fmt2(n){ return Number(n||0).toFixed(2); }
