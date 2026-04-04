@@ -1,24 +1,20 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f6f8;
+}
+
 #app {
-    display: flex;
-    min-height: 100vh;
+    max-width: 1200px;
+    margin: auto;
+    padding: 16px;
 }
 
-/* Sidebar stable */
-#sidebar {
-    width: 220px;
-    min-width: 220px;
+.header {
+    margin-bottom: 16px;
 }
 
-/* Main full width */
-.main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Content */
 #content {
-    padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 20px;
