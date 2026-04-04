@@ -1,37 +1,40 @@
-export function renderLineChart(canvasId, labels, data1, data2, label1, label2) {
+let chartInstance = null;
 
-    const ctx = document.getElementById(canvasId);
+export function renderLineChart(id, labels, dataA, dataB, labelA, labelB){
 
-    new Chart(ctx, {
+    const ctx = document.getElementById(id);
+
+    // 🔥 DESTROY OLD CHART (GLOBAL SAFE FIX)
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
         type: "line",
         data: {
             labels,
             datasets: [
                 {
-                    label: label1,
-                    data: data1,
-                    borderColor: "#3b82f6",
-                    tension: 0.4
+                    label: labelA,
+                    data: dataA,
+                    borderWidth: 2,
+                    tension: 0.3
                 },
                 {
-                    label: label2,
-                    data: data2,
-                    borderColor: "#22c55e",
-                    tension: 0.4
+                    label: labelB,
+                    data: dataB,
+                    borderWidth: 2,
+                    tension: 0.3
                 }
             ]
         },
         options: {
             responsive: true,
             plugins: {
-                legend: {
-                    labels: { color: "#fff" }
-                }
-            },
-            scales: {
-                x: { ticks: { color: "#aaa" }},
-                y: { ticks: { color: "#aaa" }}
+                legend: { display: true }
             }
         }
     });
+
+    return chartInstance;
 }
