@@ -1,9 +1,10 @@
-import { applyGlobalFilters } from "../../core/filterEngine.js";
+import { applyDateFilter } from "../../core/filterEngine.js";
 import { getData } from "../../core/dataRegistry.js";
 
 export function buildDailyAdsData() {
 
-    const ads = applyGlobalFilters(getData("CDR"));
+    // 🔥 USE YOUR EXISTING FILTER ENGINE
+    const ads = applyDateFilter("CDR", "date");
 
     const map = {};
 
