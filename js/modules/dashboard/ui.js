@@ -9,26 +9,23 @@ export function renderDashboard(data) {
 
             <!-- KPI -->
             <div class="kpi-grid">
-                ${kpiCard("GMV", fmt(data.kpi.gmv))}
-                ${kpiCard("Units", fmt(data.kpi.units))}
-                ${kpiCard("ASP", fmt2(data.kpi.asp))}
-                ${kpiCard("Spend", fmt(data.kpi.spend))}
-                ${kpiCard("Revenue", fmt(data.kpi.revenue))}
-                ${kpiCard("CTR", pct(data.kpi.ctr))}
-                ${kpiCard("ROI", fmt2(data.kpi.roi))}
+
+                <!-- SALES -->
+                ${kpi("GMV", fmt(data.kpi.gmv))}
+                ${kpi("Units", fmt(data.kpi.units))}
+                ${kpi("ASP", fmt2(data.kpi.asp))}
+
+                <!-- ADS -->
+                ${kpi("Spend", fmt(data.kpi.spend))}
+                ${kpi("Revenue", fmt(data.kpi.revenue))}
+                ${kpi("ROI", fmt2(data.kpi.roi))}
+
             </div>
 
-            <!-- CHARTS -->
-            <div class="chart-grid">
-                <div class="card">
-                    <h3>Sales Trend</h3>
-                    <canvas id="salesChart"></canvas>
-                </div>
-
-                <div class="card">
-                    <h3>Ads Trend</h3>
-                    <canvas id="adsChart"></canvas>
-                </div>
+            <!-- SALES CHART ONLY -->
+            <div class="card">
+                <h3>Sales Trend</h3>
+                <canvas id="salesChart"></canvas>
             </div>
 
             <!-- BRAND TABLE -->
@@ -62,7 +59,6 @@ export function renderDashboard(data) {
                 ${tab("alerts","Alerts")}
             </div>
 
-            <!-- REPORT CONTAINER -->
             <div id="reportContainer" class="card"></div>
 
         </div>
@@ -72,46 +68,19 @@ export function renderDashboard(data) {
     initTabs();
 }
 
-/* ---------- TABS ---------- */
+/* ---------- CHART ---------- */
 
-function initTabs() {
+function renderCharts(data) {
 
-    const tabs = document.querySelectorAll(".tab");
+    const labels = Object.keys(data.charts.sales);
+    const values = Object.values(data.charts.sales);
 
-    tabs.forEach(tab => {
-
-        tab.addEventListener("click", () => {
-
-            tabs.forEach(t => t.classList.remove("active"));
-            tab.classList.add("active");
-
-            const type = tab.dataset.type;
-
-            renderReport(type);
-        });
-    });
-
-    // DEFAULT LOAD
-    renderReport("campaign");
-}
-
-/* ---------- REPORT SWITCH ---------- */
-
-function renderReport(type) {
-
-    const container = document.getElementById("reportContainer");
-
-    // Temporary placeholder (next step will replace with real engines)
-    container.innerHTML = `
-        <div style="padding:20px; font-size:14px;">
-            <b>${type.toUpperCase()}</b> report loading...
-        </div>
-    `;
+    renderLineChart("salesChart", labels, values, [], "Sales", "");
 }
 
 /* ---------- HELPERS ---------- */
 
-function kpiCard(title, value) {
+function kpi(title, value){
     return `
         <div class="kpi-card">
             <h3>${title}</h3>
@@ -120,16 +89,12 @@ function kpiCard(title, value) {
     `;
 }
 
-function tab(id, name, active=false) {
-    return `
-        <div class="tab ${active ? "active" : ""}" data-type="${id}">
-            ${name}
-        </div>
-    `;
+function tab(id, name, active=false){
+    return `<div class="tab ${active?"active":""}" data-type="${id}">${name}</div>`;
 }
 
-function brandRows(map={}) {
-    return Object.entries(map).map(([b,v]) => `
+function brandRows(map={}){
+    return Object.entries(map).map(([b,v])=>`
         <tr>
             <td>${b}</td>
             <td>${fmt(v.gmv)}</td>
@@ -142,22 +107,30 @@ function brandRows(map={}) {
     `).join("");
 }
 
-function renderCharts(data) {
-
-    const salesLabels = Object.keys(data.charts.sales);
-    const salesData = Object.values(data.charts.sales);
-
-    renderLineChart("salesChart", salesLabels, salesData, [], "Sales", "");
-
-    const adsLabels = Object.keys(data.charts.ads);
-    const spend = adsLabels.map(d => data.charts.ads[d].spend);
-    const revenue = adsLabels.map(d => data.charts.ads[d].revenue);
-
-    renderLineChart("adsChart", adsLabels, spend, revenue, "Spend", "Revenue");
-}
-
-/* ---------- FORMAT ---------- */
-
 function fmt(n){ return Number(n||0).toLocaleString(); }
 function fmt2(n){ return Number(n||0).toFixed(2); }
-function pct(n){ return ((n||0)*100).toFixed(2)+"%"; }
+
+/* ---------- TABS ---------- */
+
+function initTabs(){
+
+    const tabs = document.querySelectorAll(".tab");
+
+    tabs.forEach(tab=>{
+        tab.onclick = ()=>{
+            tabs.forEach(t=>t.classList.remove("active"));
+            tab.classList.add("active");
+
+            renderReport(tab.dataset.type);
+        };
+    });
+
+    renderReport("campaign");
+}
+
+function renderReport(type){
+
+    const el = document.getElementById("reportContainer");
+
+    el.innerHTML = `<div style="padding:20px">${type.toUpperCase()} report coming next</div>`;
+}
