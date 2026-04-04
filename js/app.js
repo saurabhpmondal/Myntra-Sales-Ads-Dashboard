@@ -1,18 +1,18 @@
 import { loadAllData } from "./core/dataLoader.js";
+import { buildRegistry } from "./core/dataRegistry.js";
 import { initFilters } from "./filters/binder.js";
 import { runDashboard } from "./modules/dashboard/binder.js";
 
 async function initApp() {
 
-    const data = await loadAllData();
+    const raw = await loadAllData();
 
-    // global state (simple for now)
+    const data = buildRegistry(raw);
+
     window.APP_DATA = data;
 
-    // init filters
     initFilters();
 
-    // load dashboard
     runDashboard();
 }
 
