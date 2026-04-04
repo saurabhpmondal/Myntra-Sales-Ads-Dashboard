@@ -1,17 +1,19 @@
 import { loadAllData } from "./core/dataLoader.js";
-import { renderFilters } from "./ui/filters.js";
+import { initFilters } from "./filters/binder.js";
 import { runDashboard } from "./modules/dashboard/binder.js";
 
 async function initApp() {
 
-    const rawData = await loadAllData();
+    const data = await loadAllData();
 
-    window.APP_DATA = rawData;
+    // global state (simple for now)
+    window.APP_DATA = data;
 
-    renderFilters();
+    // init filters
+    initFilters();
 
+    // load dashboard
     runDashboard();
-
 }
 
 initApp();
