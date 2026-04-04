@@ -1,10 +1,25 @@
-import { applyDateFilter } from "../../core/filterEngine.js";
 import { getData } from "../../core/dataRegistry.js";
 
 export function buildDailyAdsData() {
 
-    // 🔥 USE YOUR EXISTING FILTER ENGINE
-    const ads = applyDateFilter("CDR", "date");
+    const raw = getData("CDR");
+
+    const state = window.APP_STATE || {};
+    const from = state.from;
+    const to = state.to;
+    const brand = state.brand;
+
+    const ads = raw.filter(r => {
+
+        // DATE FILTER
+        if (from && r.date < from) return false;
+        if (to && r.date > to) return false;
+
+        // BRAND FILTER (if exists)
+        if (brand && r.brand && r.brand !== brand) return false;
+
+        return true;
+    });
 
     const map = {};
 
@@ -38,7 +53,6 @@ export function buildDailyAdsData() {
         map[d].indirect_rev += r.indirect_revenue || 0;
     });
 
-    // DERIVED METRICS
     Object.values(map).forEach(r => {
 
         r.total_units = r.direct_units + r.indirect_units;
