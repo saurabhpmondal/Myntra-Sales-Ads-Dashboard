@@ -9,40 +9,13 @@ export function renderDashboard(data) {
 
             <!-- KPI -->
             <div class="kpi-grid">
-                <div class="kpi-card">
-                    <h3>GMV</h3>
-                    <p>${fmt(data.kpi.gmv)}</p>
-                </div>
-
-                <div class="kpi-card">
-                    <h3>Units</h3>
-                    <p>${fmt(data.kpi.units)}</p>
-                </div>
-
-                <div class="kpi-card">
-                    <h3>ASP</h3>
-                    <p>${fmt2(data.kpi.asp)}</p>
-                </div>
-
-                <div class="kpi-card">
-                    <h3>Spend</h3>
-                    <p>${fmt(data.kpi.spend)}</p>
-                </div>
-
-                <div class="kpi-card">
-                    <h3>Revenue</h3>
-                    <p>${fmt(data.kpi.revenue)}</p>
-                </div>
-
-                <div class="kpi-card">
-                    <h3>CTR</h3>
-                    <p>${pct(data.kpi.ctr)}</p>
-                </div>
-
-                <div class="kpi-card">
-                    <h3>ROI</h3>
-                    <p>${fmt2(data.kpi.roi)}</p>
-                </div>
+                ${kpiCard("GMV", fmt(data.kpi.gmv))}
+                ${kpiCard("Units", fmt(data.kpi.units))}
+                ${kpiCard("ASP", fmt2(data.kpi.asp))}
+                ${kpiCard("Spend", fmt(data.kpi.spend))}
+                ${kpiCard("Revenue", fmt(data.kpi.revenue))}
+                ${kpiCard("CTR", pct(data.kpi.ctr))}
+                ${kpiCard("ROI", fmt2(data.kpi.roi))}
             </div>
 
             <!-- CHARTS -->
@@ -61,7 +34,6 @@ export function renderDashboard(data) {
             <!-- BRAND TABLE -->
             <div class="card">
                 <h3>Brand Performance</h3>
-
                 <table class="table">
                     <thead>
                         <tr>
@@ -74,71 +46,118 @@ export function renderDashboard(data) {
                             <th>SOR</th>
                         </tr>
                     </thead>
-
                     <tbody>
-                        ${Object.entries(data.brandMap || {}).map(([b, v]) => `
-                            <tr>
-                                <td>${b}</td>
-                                <td>${fmt(v.gmv)}</td>
-                                <td>${fmt(v.units)}</td>
-                                <td>${fmt2(v.units ? v.gmv / v.units : 0)}</td>
-                                <td>${fmt(v.PPMP)}</td>
-                                <td>${fmt(v.SJIT)}</td>
-                                <td>${fmt(v.SOR)}</td>
-                            </tr>
-                        `).join("")}
+                        ${brandRows(data.brandMap)}
                     </tbody>
                 </table>
             </div>
+
+            <!-- TABS -->
+            <div class="tabs">
+                ${tab("campaign","Campaign",true)}
+                ${tab("placement","Placement")}
+                ${tab("product","Daily Ads")}
+                ${tab("listings","Listings")}
+                ${tab("traffic","Traffic")}
+                ${tab("alerts","Alerts")}
+            </div>
+
+            <!-- REPORT CONTAINER -->
+            <div id="reportContainer" class="card"></div>
 
         </div>
     `;
 
     renderCharts(data);
+    initTabs();
 }
 
-/* ---------- CHARTS ---------- */
+/* ---------- TABS ---------- */
 
-function renderCharts(data) {
+function initTabs() {
 
-    // SALES CHART
-    const salesLabels = Object.keys(data.charts?.sales || {});
-    const salesData = Object.values(data.charts?.sales || {});
+    const tabs = document.querySelectorAll(".tab");
 
-    renderLineChart(
-        "salesChart",
-        salesLabels,
-        salesData,
-        [],
-        "Sales",
-        ""
-    );
+    tabs.forEach(tab => {
 
-    // ADS CHART
-    const adsLabels = Object.keys(data.charts?.ads || {});
-    const spend = adsLabels.map(d => data.charts.ads[d]?.spend || 0);
-    const revenue = adsLabels.map(d => data.charts.ads[d]?.revenue || 0);
+        tab.addEventListener("click", () => {
 
-    renderLineChart(
-        "adsChart",
-        adsLabels,
-        spend,
-        revenue,
-        "Spend",
-        "Revenue"
-    );
+            tabs.forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+
+            const type = tab.dataset.type;
+
+            renderReport(type);
+        });
+    });
+
+    // DEFAULT LOAD
+    renderReport("campaign");
+}
+
+/* ---------- REPORT SWITCH ---------- */
+
+function renderReport(type) {
+
+    const container = document.getElementById("reportContainer");
+
+    // Temporary placeholder (next step will replace with real engines)
+    container.innerHTML = `
+        <div style="padding:20px; font-size:14px;">
+            <b>${type.toUpperCase()}</b> report loading...
+        </div>
+    `;
 }
 
 /* ---------- HELPERS ---------- */
 
-function fmt(n) {
-    return Number(n || 0).toLocaleString();
+function kpiCard(title, value) {
+    return `
+        <div class="kpi-card">
+            <h3>${title}</h3>
+            <p>${value}</p>
+        </div>
+    `;
 }
 
-function fmt2(n) {
-    return Number(n || 0).toFixed(2);
+function tab(id, name, active=false) {
+    return `
+        <div class="tab ${active ? "active" : ""}" data-type="${id}">
+            ${name}
+        </div>
+    `;
 }
 
-function pct(n) {
-    return ((n || 0) * 100).toFixed(2) + "%";
+function brandRows(map={}) {
+    return Object.entries(map).map(([b,v]) => `
+        <tr>
+            <td>${b}</td>
+            <td>${fmt(v.gmv)}</td>
+            <td>${fmt(v.units)}</td>
+            <td>${fmt2(v.units ? v.gmv/v.units : 0)}</td>
+            <td>${fmt(v.PPMP)}</td>
+            <td>${fmt(v.SJIT)}</td>
+            <td>${fmt(v.SOR)}</td>
+        </tr>
+    `).join("");
 }
+
+function renderCharts(data) {
+
+    const salesLabels = Object.keys(data.charts.sales);
+    const salesData = Object.values(data.charts.sales);
+
+    renderLineChart("salesChart", salesLabels, salesData, [], "Sales", "");
+
+    const adsLabels = Object.keys(data.charts.ads);
+    const spend = adsLabels.map(d => data.charts.ads[d].spend);
+    const revenue = adsLabels.map(d => data.charts.ads[d].revenue);
+
+    renderLineChart("adsChart", adsLabels, spend, revenue, "Spend", "Revenue");
+}
+
+/* ---------- FORMAT ---------- */
+
+function fmt(n){ return Number(n||0).toLocaleString(); }
+function fmt2(n){ return Number(n||0).toFixed(2); }
+function pct(n){ return ((n||0)*100).toFixed(2)+"%"; }
