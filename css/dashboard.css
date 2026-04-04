@@ -1,15 +1,19 @@
-/* EXISTING (KEEP) */
 .dashboard {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
 }
 
-/* KPI */
+/* 🔥 ADD SPACE FROM FILTERS */
+#content {
+    margin-top: 16px;
+}
+
+/* KPI GRID 2x3 */
 .dashboard .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
 }
 
 .dashboard .kpi-card {
@@ -19,23 +23,23 @@
     border: 1px solid #e5e7eb;
 }
 
+.dashboard .kpi-card h3 {
+    font-size: 12px;
+    color: #6b7280;
+}
+
 .dashboard .kpi-card p {
     font-size: 22px;
     font-weight: 700;
 }
 
 /* TABLE */
-.dashboard .table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
 .dashboard .table td {
     padding: 10px;
     border-top: 1px solid #e5e7eb;
 }
 
-/* 🔥 NEW TABS */
+/* TABS */
 .tabs {
     display: flex;
     gap: 10px;
@@ -47,17 +51,11 @@
     cursor: pointer;
     background: #f3f4f6;
     border-radius: 8px 8px 0 0;
-    font-size: 14px;
 }
 
 .tab.active {
-    background: #ffffff;
+    background: #fff;
     border: 1px solid #e5e7eb;
     border-bottom: none;
     font-weight: 600;
-}
-
-/* REPORT */
-#reportContainer {
-    min-height: 120px;
 }
