@@ -4,6 +4,8 @@ export function renderDashboard(data) {
 
     const content = document.getElementById("content");
 
+    const k = data.kpi || {};
+
     content.innerHTML = `
         <div class="dashboard">
 
@@ -11,42 +13,45 @@ export function renderDashboard(data) {
             <div class="kpi-grid">
 
                 <!-- SALES -->
-                ${kpi("GMV", fmt(data.kpi.gmv))}
-                ${kpi("Units", fmt(data.kpi.units))}
-                ${kpi("ASP", fmt2(data.kpi.asp))}
+                ${kpi("GMV", fmt(k.gmv))}
+                ${kpi("Units", fmt(k.units))}
+                ${kpi("ASP", fmt2(k.asp))}
 
                 <!-- ADS -->
-                ${kpi("Spend", fmt(data.kpi.spend))}
-                ${kpi("Revenue", fmt(data.kpi.revenue))}
-                ${kpi("ROI", fmt2(data.kpi.roi))}
+                ${kpi("Spend", fmt(k.spend))}
+                ${kpi("Revenue", fmt(k.revenue))}
+                ${kpi("ROI", fmt2(k.roi))}
 
             </div>
 
-            <!-- SALES CHART ONLY -->
+            <!-- SALES CHART -->
             <div class="card">
                 <h3>Sales Trend</h3>
                 <canvas id="salesChart"></canvas>
             </div>
 
             <!-- BRAND TABLE -->
-            <div class="card">
+            <div class="card table-card">
                 <h3>Brand Performance</h3>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Brand</th>
-                            <th>GMV</th>
-                            <th>Units</th>
-                            <th>ASP</th>
-                            <th>PPMP</th>
-                            <th>SJIT</th>
-                            <th>SOR</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${brandRows(data.brandMap)}
-                    </tbody>
-                </table>
+
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Brand</th>
+                                <th>GMV</th>
+                                <th>Units</th>
+                                <th>ASP</th>
+                                <th>PPMP</th>
+                                <th>SJIT</th>
+                                <th>SOR</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${brandRows(data.brandMap)}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- TABS -->
@@ -71,10 +76,8 @@ export function renderDashboard(data) {
 /* ---------- CHART ---------- */
 
 function renderCharts(data) {
-
-    const labels = Object.keys(data.charts.sales);
-    const values = Object.values(data.charts.sales);
-
+    const labels = Object.keys(data.charts?.sales || {});
+    const values = Object.values(data.charts?.sales || {});
     renderLineChart("salesChart", labels, values, [], "Sales", "");
 }
 
@@ -107,8 +110,15 @@ function brandRows(map={}){
     `).join("");
 }
 
-function fmt(n){ return Number(n||0).toLocaleString(); }
-function fmt2(n){ return Number(n||0).toFixed(2); }
+/* ---------- FORMAT ---------- */
+
+function fmt(n){
+    return Number(n || 0).toLocaleString();
+}
+
+function fmt2(n){
+    return Number(n || 0).toFixed(2);
+}
 
 /* ---------- TABS ---------- */
 
@@ -129,8 +139,6 @@ function initTabs(){
 }
 
 function renderReport(type){
-
-    const el = document.getElementById("reportContainer");
-
-    el.innerHTML = `<div style="padding:20px">${type.toUpperCase()} report coming next</div>`;
+    document.getElementById("reportContainer").innerHTML =
+        `<div style="padding:20px">${type.toUpperCase()} report coming next</div>`;
 }
