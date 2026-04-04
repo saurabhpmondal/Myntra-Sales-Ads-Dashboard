@@ -1,0 +1,40 @@
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+}
+
+.kpi-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+}
+
+.kpi-card h3 {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.kpi-card p {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+/* TABLE */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th {
+    font-size: 12px;
+    color: #6b7280;
+    padding: 10px;
+    text-align: left;
+}
+
+.table td {
+    padding: 10px;
+    border-top: 1px solid #e5e7eb;
+}
