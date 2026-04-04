@@ -4,12 +4,7 @@
     gap: 24px;
 }
 
-/* 🔥 ADD SPACE FROM FILTERS */
-#content {
-    margin-top: 16px;
-}
-
-/* KPI GRID 2x3 */
+/* KPI GRID */
 .dashboard .kpi-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -23,20 +18,50 @@
     border: 1px solid #e5e7eb;
 }
 
-.dashboard .kpi-card h3 {
-    font-size: 12px;
-    color: #6b7280;
-}
-
 .dashboard .kpi-card p {
     font-size: 22px;
     font-weight: 700;
 }
 
+/* TABLE CARD */
+.table-card {
+    padding: 16px;
+}
+
+/* TABLE WRAPPER */
+.table-wrapper {
+    overflow-x: auto;
+    margin-top: 10px;
+}
+
 /* TABLE */
+.dashboard .table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* HEADER */
+.dashboard .table thead {
+    background: #f9fafb;
+}
+
+.dashboard .table th {
+    font-size: 12px;
+    color: #6b7280;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* ROWS */
 .dashboard .table td {
-    padding: 10px;
-    border-top: 1px solid #e5e7eb;
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* HOVER */
+.dashboard .table tr:hover {
+    background: #f9fafb;
 }
 
 /* TABS */
