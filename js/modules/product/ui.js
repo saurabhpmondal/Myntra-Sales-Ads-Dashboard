@@ -1,5 +1,7 @@
 import { renderLineChart } from "../../ui/components/charts/lineChart.js";
 
+let chartRef = null; // 🔥 track chart instance
+
 export function renderDailyAds(map) {
 
     const container = document.getElementById("reportContainer");
@@ -7,17 +9,11 @@ export function renderDailyAds(map) {
     container.innerHTML = `
         <div class="daily-ads">
 
-            <!-- METRIC SELECTORS -->
+            <!-- SELECTORS -->
             <div class="dual-select">
-                <select id="metricA">
-                    ${options()}
-                </select>
-
+                <select id="metricA">${options("spend")}</select>
                 <span>vs</span>
-
-                <select id="metricB">
-                    ${options("revenue")}
-                </select>
+                <select id="metricB">${options("total_rev")}</select>
             </div>
 
             <!-- CHART -->
@@ -33,15 +29,17 @@ export function renderDailyAds(map) {
         </div>
     `;
 
-    renderChart(map);
+    // Initial render
+    updateChart(map);
 
-    document.getElementById("metricA").onchange = () => renderChart(map);
-    document.getElementById("metricB").onchange = () => renderChart(map);
+    // Events
+    document.getElementById("metricA").onchange = () => updateChart(map);
+    document.getElementById("metricB").onchange = () => updateChart(map);
 }
 
 /* ---------- OPTIONS ---------- */
 
-function options(selected="spend") {
+function options(selected) {
 
     const list = [
         "spend","impressions","clicks","ctr",
@@ -55,9 +53,9 @@ function options(selected="spend") {
     `).join("");
 }
 
-/* ---------- CHART ---------- */
+/* ---------- CHART FIX ---------- */
 
-function renderChart(map) {
+function updateChart(map) {
 
     const A = document.getElementById("metricA").value;
     const B = document.getElementById("metricB").value;
@@ -67,7 +65,19 @@ function renderChart(map) {
     const dataA = labels.map(d => map[d][A] || 0);
     const dataB = labels.map(d => map[d][B] || 0);
 
-    renderLineChart("dailyAdsChart", labels, dataA, dataB, A, B);
+    // 🔥 DESTROY OLD CHART (important)
+    if (chartRef && chartRef.destroy) {
+        chartRef.destroy();
+    }
+
+    chartRef = renderLineChart(
+        "dailyAdsChart",
+        labels,
+        dataA,
+        dataB,
+        A,
+        B
+    );
 }
 
 /* ---------- TABLE ---------- */
