@@ -1,82 +1,62 @@
-import { COLUMN_MAPPING } from "./columnMapping.js";
-import { DATA_REGISTRY } from "./dataRegistry.js";
-import { normalizeDate } from "./dateHelper.js";
+export function normalizeData(dataset, rows) {
 
-function toNumber(value) {
-    const num = Number(value);
-    return isNaN(num) ? 0 : num;
-}
+    if (dataset === "SALES") {
+        return rows.map(r => ({
+            brand: r.brand,
+            style_id: r.style_id,
+            po_type: r.po_type,
+            qty: Number(r.qty) || 0,
+            final_amount: Number(r.final_amount) || 0,
+            date: r.date,
+            month: r.month,
+            year: r.year
+        }));
+    }
 
-// 🔥 MONTH MAP (CLEAN + FIXED)
-const MONTH_MAP = {
-    JAN: "01",
-    FEB: "02",
-    MAR: "03",
-    APR: "04",
-    MAY: "05",
-    JUN: "06",
-    JUL: "07",
-    AUG: "08",
-    SEP: "09",
-    OCT: "10",
-    NOV: "11",
-    DEC: "12"
-};
+    if (dataset === "CDR") {
+        return rows.map(r => ({
+            impressions: Number(r.impressions) || 0,
+            clicks: Number(r.clicks) || 0,
+            ad_spend: Number(r.ad_spend) || 0,
+            total_revenue: Number(r.total_revenue) || 0,
+            units_sold_total: Number(r.units_sold_total) || 0,
+            campaign_name: r.campaign_name,
+            date: r.date,
+            month: r.month
+        }));
+    }
 
-// 🔥 FINAL SALES DATE BUILDER (NO SPLIT, NO CREATED ON)
-function buildSalesDate(row) {
+    if (dataset === "CPR") {
+        return rows.map(r => ({
+            product_id: r.product_id,
+            product_name: r.product_name,
+            spend: Number(r.budget_spend) || 0,
+            revenue: Number(r.total_revenue) || 0,
+            units: Number(r.units_sold_total) || 0,
+            campaign_name: r.campaign_name
+        }));
+    }
 
-    const day = String(row["date"]).trim();
-    const monthRaw = String(row["month"]).trim().toUpperCase();
-    const year = String(row["year"]).trim();
+    if (dataset === "PPR") {
+        return rows.map(r => ({
+            placement: r.placement,
+            spend: Number(r.budget_spend) || 0,
+            revenue: Number(r.total_revenue) || 0,
+            clicks: Number(r.clicks) || 0,
+            impressions: Number(r.impressions) || 0
+        }));
+    }
 
-    if (!day || !monthRaw || !year) return null;
+    if (dataset === "TRAFFIC") {
+        return rows.map(r => ({
+            style_id: r.style_id,
+            brand: r.brand,
+            impressions: Number(r.impressions) || 0,
+            clicks: Number(r.clicks) || 0,
+            add_to_carts: Number(r.add_to_carts) || 0,
+            purchases: Number(r.purchases) || 0
+        }));
+    }
 
-    const month = MONTH_MAP[monthRaw];
-
-    if (!month) return null;
-
-    const d = day.padStart(2, "0");
-
-    return `${year}-${month}-${d}`;
-}
-
-export function normalizeDataset(name, data) {
-
-    const mapping = COLUMN_MAPPING[name];
-    const config = DATA_REGISTRY[name];
-
-    return data.map(row => {
-
-        const obj = {};
-
-        for (let key in mapping) {
-
-            const raw = row[mapping[key]];
-
-            if (
-                key === "impressions" ||
-                key === "clicks" ||
-                key === "spend" ||
-                key === "revenue" ||
-                key === "units"
-            ) {
-                obj[key] = toNumber(raw);
-            } else {
-                obj[key] = raw;
-            }
-        }
-
-        // 🔥 DATE HANDLING (FINAL CORRECT)
-        if (name === "SALES") {
-            obj.date = buildSalesDate(row);
-        } else {
-            obj.date = normalizeDate(
-                row[config.dateField],
-                config.dateFormat
-            );
-        }
-
-        return obj;
-    });
+    return rows;
 }
