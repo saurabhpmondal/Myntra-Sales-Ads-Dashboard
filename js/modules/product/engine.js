@@ -2,20 +2,22 @@ import { getData } from "../../core/dataRegistry.js";
 
 export function buildDailyAdsData() {
 
-    const raw = getData("CDR");
+    const raw = getData("CDR") || [];
 
     const state = window.APP_STATE || {};
     const from = state.from;
     const to = state.to;
     const brand = state.brand;
 
+    // 🔍 FILTERING (date + brand)
     const ads = raw.filter(r => {
 
-        // DATE FILTER
-        if (from && r.date < from) return false;
-        if (to && r.date > to) return false;
+        const d = r.date;
+        if (!d) return false;
 
-        // BRAND FILTER (if exists)
+        if (from && d < from) return false;
+        if (to && d > to) return false;
+
         if (brand && r.brand && r.brand !== brand) return false;
 
         return true;
@@ -42,17 +44,29 @@ export function buildDailyAdsData() {
             };
         }
 
-        map[d].spend += r.ad_spend || 0;
-        map[d].impressions += r.impressions || 0;
-        map[d].clicks += r.clicks || 0;
+        // 🔢 SAFE NUMBER PARSING (VERY IMPORTANT)
+        const spend = Number(r.ad_spend || 0);
+        const impressions = Number(r.impressions || 0);
+        const clicks = Number(r.clicks || 0);
 
-        map[d].direct_units += r.direct_units_sold || 0;
-        map[d].indirect_units += r.indirect_units_sold || 0;
+        const dUnits = Number(r.direct_units_sold || 0);
+        const iUnits = Number(r.indirect_units_sold || 0);
 
-        map[d].direct_rev += r.direct_revenue || 0;
-        map[d].indirect_rev += r.indirect_revenue || 0;
+        const dRev = Number(r.direct_revenue || 0);
+        const iRev = Number(r.indirect_revenue || 0);
+
+        map[d].spend += spend;
+        map[d].impressions += impressions;
+        map[d].clicks += clicks;
+
+        map[d].direct_units += dUnits;
+        map[d].indirect_units += iUnits;
+
+        map[d].direct_rev += dRev;
+        map[d].indirect_rev += iRev;
     });
 
+    // 📊 DERIVED METRICS
     Object.values(map).forEach(r => {
 
         r.total_units = r.direct_units + r.indirect_units;
