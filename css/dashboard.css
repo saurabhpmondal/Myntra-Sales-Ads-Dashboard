@@ -1,40 +1,68 @@
-.kpi-grid {
+/* =========================
+   DASHBOARD WRAPPER
+========================= */
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* =========================
+   KPI GRID
+========================= */
+.dashboard .kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 14px;
 }
 
-.kpi-card {
-    background: #fff;
-    border-radius: 10px;
-    padding: 14px;
+.dashboard .kpi-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
     border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
 }
 
-.kpi-card h3 {
+.dashboard .kpi-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* TITLE */
+.dashboard .kpi-card h3 {
     font-size: 12px;
     color: #6b7280;
+    margin-bottom: 6px;
 }
 
-.kpi-card p {
-    font-size: 20px;
+/* VALUE */
+.dashboard .kpi-card p {
+    font-size: 22px;
     font-weight: 700;
+    color: #111827;
 }
 
-/* TABLE */
-.table {
+/* =========================
+   TABLE
+========================= */
+.dashboard .table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.table th {
+.dashboard .table th {
     font-size: 12px;
     color: #6b7280;
-    padding: 10px;
+    padding: 12px;
     text-align: left;
 }
 
-.table td {
-    padding: 10px;
+.dashboard .table td {
+    padding: 12px;
     border-top: 1px solid #e5e7eb;
+}
+
+/* ROW HOVER */
+.dashboard .table tr:hover {
+    background: #f9fafb;
 }
