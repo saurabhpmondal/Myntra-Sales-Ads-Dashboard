@@ -1,14 +1,17 @@
 export function parseCSV(text) {
 
-    const rows = text.trim().split("\n");
-    const headers = rows[0].split(",");
+    const rows = text.trim().split("\n").map(r => r.split(","));
+
+    const headers = rows[0].map(h =>
+        h.trim().toLowerCase().replace(/\r/g, "")
+    );
 
     return rows.slice(1).map(row => {
-        const values = row.split(",");
+
         const obj = {};
 
         headers.forEach((h, i) => {
-            obj[h.trim()] = values[i]?.trim();
+            obj[h] = (row[i] || "").trim();
         });
 
         return obj;
