@@ -8,36 +8,12 @@ export async function loadAllData() {
         TRAFFIC: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGOsj66mo-CpS5eTerQgEcjYvr5GuOkQUIQ_9Sy4bwFu6FjGv9wBvCZn5UQBcFB7M-dcuJdbxMxSnj/pub?gid=533529379&output=csv"
     };
 
-    const result = {};
+    const raw = {};
 
     for (const key in urls) {
         const res = await fetch(urls[key]);
-        const text = await res.text();
-        result[key] = parseCSV(text);
+        raw[key] = await res.text();
     }
 
-    return result;
-}
-
-/* ---------- CSV PARSER (FIXED) ---------- */
-
-function parseCSV(text) {
-
-    const rows = text.trim().split("\n").map(r => r.split(","));
-
-    // ✅ CLEAN HEADERS
-    const headers = rows[0].map(h =>
-        h.trim().toLowerCase().replace(/\r/g, "")
-    );
-
-    return rows.slice(1).map(row => {
-
-        const obj = {};
-
-        headers.forEach((h, i) => {
-            obj[h] = (row[i] || "").trim();
-        });
-
-        return obj;
-    });
+    return raw; // only raw CSV
 }
