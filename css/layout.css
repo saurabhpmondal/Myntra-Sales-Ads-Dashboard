@@ -14,35 +14,11 @@ body {
     margin-bottom: 16px;
 }
 
-/* 🔥 LOADER BAR */
-#loaderBar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 4px;
-    width: 100%;
-    background: #e5e7eb;
-    z-index: 9999;
+/* 🔥 FIX GAP */
+#filters {
+    margin-bottom: 20px;
 }
 
-#loaderFill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #4f46e5, #22c55e);
-    transition: width 0.2s ease;
-}
-
-/* 🔥 PERCENT TEXT */
-#loaderText {
-    position: fixed;
-    top: 6px;
-    right: 12px;
-    font-size: 12px;
-    color: #374151;
-    z-index: 9999;
-}
-
-/* CONTENT GAP */
 #content {
     display: flex;
     flex-direction: column;
