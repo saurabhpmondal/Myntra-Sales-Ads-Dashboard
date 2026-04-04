@@ -1,7 +1,9 @@
 import { buildAlerts } from "./engine.js";
 import { renderAlerts } from "./ui.js";
 
-export function run() {
+export function runAlerts(){
+
     const data = buildAlerts();
+
     renderAlerts(data);
 }
