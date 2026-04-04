@@ -1,19 +1,9 @@
 import { buildDashboard } from "./engine.js";
 import { renderDashboard } from "./ui.js";
 
-export function run() {
+export function runDashboard() {
 
-    try {
+    const data = buildDashboard(window.APP_DATA);
 
-        const data = buildDashboard();
-
-        renderDashboard(data);
-
-    } catch (e) {
-
-        console.error("Dashboard error:", e);
-
-        document.getElementById("content").innerHTML =
-            "<p>Error loading dashboard</p>";
-    }
+    renderDashboard(data);
 }
