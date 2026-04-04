@@ -1,19 +1,68 @@
-import { loadAllData } from "./core/dataLoader.js";
-import { buildRegistry } from "./core/dataRegistry.js";
-import { initFilters } from "./filters/binder.js";
-import { runDashboard } from "./modules/dashboard/binder.js";
+/* =========================
+   🔥 GLOBAL LOADER SYSTEM
+========================= */
 
-async function initApp() {
+let progress = 0;
+let interval = null;
 
-    const raw = await loadAllData();
+function startLoader(){
 
-    const data = buildRegistry(raw);
+    progress = 0;
+    updateLoader();
 
-    window.APP_DATA = data;
+    clearInterval(interval);
 
-    initFilters();
+    interval = setInterval(() => {
 
-    runDashboard();
+        if (progress < 85) {
+            progress += Math.random() * 10; // fake progress feel
+            updateLoader();
+        }
+
+    }, 200);
 }
 
-initApp();
+function stopLoader(){
+
+    clearInterval(interval);
+
+    progress = 100;
+    updateLoader();
+
+    setTimeout(() => {
+        progress = 0;
+        updateLoader();
+    }, 500);
+}
+
+function updateLoader(){
+
+    const bar = document.getElementById("loaderFill");
+    const text = document.getElementById("loaderText");
+
+    if (!bar || !text) return;
+
+    bar.style.width = progress + "%";
+    text.innerText = Math.floor(progress) + "%";
+}
+
+/* =========================
+   🔥 AUTO HOOKS
+========================= */
+
+// App start
+window.addEventListener("load", () => {
+    startLoader();
+
+    // simulate load completion
+    setTimeout(() => {
+        stopLoader();
+    }, 800);
+});
+
+/* =========================
+   🔥 OPTIONAL GLOBAL USE
+========================= */
+
+window.startLoader = startLoader;
+window.stopLoader = stopLoader;
