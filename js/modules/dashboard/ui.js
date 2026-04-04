@@ -1,4 +1,5 @@
 import { renderLineChart } from "../../ui/components/charts/lineChart.js";
+import { runDailyAds } from "../product/binder.js";
 
 export function renderDashboard(data) {
 
@@ -64,6 +65,7 @@ export function renderDashboard(data) {
                 ${tab("alerts","Alerts")}
             </div>
 
+            <!-- REPORT -->
             <div id="reportContainer" class="card"></div>
 
         </div>
@@ -79,6 +81,36 @@ function renderCharts(data) {
     const labels = Object.keys(data.charts?.sales || {});
     const values = Object.values(data.charts?.sales || {});
     renderLineChart("salesChart", labels, values, [], "Sales", "");
+}
+
+/* ---------- TABS ---------- */
+
+function initTabs(){
+
+    const tabs = document.querySelectorAll(".tab");
+
+    tabs.forEach(tab=>{
+        tab.onclick = ()=>{
+            tabs.forEach(t=>t.classList.remove("active"));
+            tab.classList.add("active");
+
+            renderReport(tab.dataset.type);
+        };
+    });
+
+    // DEFAULT LOAD
+    renderReport("campaign");
+}
+
+function renderReport(type){
+
+    if (type === "product") {
+        runDailyAds();   // ✅ correct module
+        return;
+    }
+
+    document.getElementById("reportContainer").innerHTML =
+        `<div style="padding:20px">${type.toUpperCase()} coming next</div>`;
 }
 
 /* ---------- HELPERS ---------- */
@@ -112,33 +144,5 @@ function brandRows(map={}){
 
 /* ---------- FORMAT ---------- */
 
-function fmt(n){
-    return Number(n || 0).toLocaleString();
-}
-
-function fmt2(n){
-    return Number(n || 0).toFixed(2);
-}
-
-/* ---------- TABS ---------- */
-
-function initTabs(){
-
-    const tabs = document.querySelectorAll(".tab");
-
-    tabs.forEach(tab=>{
-        tab.onclick = ()=>{
-            tabs.forEach(t=>t.classList.remove("active"));
-            tab.classList.add("active");
-
-            renderReport(tab.dataset.type);
-        };
-    });
-
-    renderReport("campaign");
-}
-
-function renderReport(type){
-    document.getElementById("reportContainer").innerHTML =
-        `<div style="padding:20px">${type.toUpperCase()} report coming next</div>`;
-}
+function fmt(n){ return Number(n||0).toLocaleString(); }
+function fmt2(n){ return Number(n||0).toFixed(2); }
