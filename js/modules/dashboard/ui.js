@@ -1,4 +1,5 @@
 import { renderLineChart } from "../../ui/components/charts/lineChart.js";
+import { runCampaign } from "../campaign/binder.js";
 import { runDailyAds } from "../product/binder.js";
 
 export function renderDashboard(data) {
@@ -10,7 +11,7 @@ export function renderDashboard(data) {
     content.innerHTML = `
         <div class="dashboard">
 
-            <!-- KPI -->
+            <!-- KPI GRID -->
             <div class="kpi-grid">
 
                 <!-- SALES -->
@@ -25,13 +26,13 @@ export function renderDashboard(data) {
 
             </div>
 
-            <!-- SALES CHART -->
+            <!-- SALES TREND -->
             <div class="card">
                 <h3>Sales Trend</h3>
                 <canvas id="salesChart"></canvas>
             </div>
 
-            <!-- BRAND TABLE -->
+            <!-- BRAND PERFORMANCE -->
             <div class="card table-card">
                 <h3>Brand Performance</h3>
 
@@ -55,7 +56,7 @@ export function renderDashboard(data) {
                 </div>
             </div>
 
-            <!-- TABS -->
+            <!-- REPORT TABS -->
             <div class="tabs">
                 ${tab("campaign","Campaign",true)}
                 ${tab("placement","Placement")}
@@ -65,7 +66,7 @@ export function renderDashboard(data) {
                 ${tab("alerts","Alerts")}
             </div>
 
-            <!-- REPORT -->
+            <!-- REPORT CONTAINER -->
             <div id="reportContainer" class="card"></div>
 
         </div>
@@ -78,8 +79,10 @@ export function renderDashboard(data) {
 /* ---------- CHART ---------- */
 
 function renderCharts(data) {
+
     const labels = Object.keys(data.charts?.sales || {});
     const values = Object.values(data.charts?.sales || {});
+
     renderLineChart("salesChart", labels, values, [], "Sales", "");
 }
 
@@ -104,8 +107,13 @@ function initTabs(){
 
 function renderReport(type){
 
+    if (type === "campaign") {
+        runCampaign();
+        return;
+    }
+
     if (type === "product") {
-        runDailyAds();   // ✅ correct module
+        runDailyAds();
         return;
     }
 
