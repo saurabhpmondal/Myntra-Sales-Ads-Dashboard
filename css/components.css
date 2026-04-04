@@ -1,34 +1,45 @@
+/* FILTER BAR */
 .filter-bar {
     display: flex;
     gap: 16px;
-    align-items: end;
     flex-wrap: wrap;
+    align-items: flex-end;
 }
 
-.filter-group {
+/* EACH FILTER */
+.filter-item {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-.filter-group label {
+/* LABEL */
+.filter-item label {
     font-size: 12px;
     color: #6b7280;
 }
 
-.filter-group input,
-.filter-group select {
+/* INPUT + SELECT */
+.filter-item input,
+.filter-item select {
     padding: 8px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
-    min-width: 140px;
+    min-width: 160px;
+    background: #fff;
 }
 
-#applyFilters {
+/* BUTTON */
+.filter-item button {
     padding: 8px 16px;
     background: #111827;
-    color: white;
+    color: #fff;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+}
+
+/* HOVER */
+.filter-item button:hover {
+    background: #374151;
 }
