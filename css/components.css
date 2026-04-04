@@ -43,3 +43,39 @@
 .filter-item button:hover {
     background: #374151;
 }
+
+/* DAILY ADS LAYOUT */
+.daily-ads {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* SELECT BAR */
+.dual-select {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dual-select select {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+}
+
+/* CARD SPACING */
+.daily-ads .card {
+    padding: 16px;
+}
+
+/* TABLE WRAPPER */
+.daily-ads .table-wrapper {
+    overflow-x: auto;
+}
+
+/* ADD GAP BETWEEN CHART & TABLE */
+.daily-ads .card + .card {
+    margin-top: 8px;
+}
