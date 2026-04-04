@@ -1,15 +1,11 @@
-/* =========================
-   DASHBOARD WRAPPER
-========================= */
+/* EXISTING (KEEP) */
 .dashboard {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-/* =========================
-   KPI GRID
-========================= */
+/* KPI */
 .dashboard .kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -17,52 +13,51 @@
 }
 
 .dashboard .kpi-card {
-    background: #ffffff;
+    background: #fff;
     border-radius: 12px;
     padding: 16px;
     border: 1px solid #e5e7eb;
-    transition: all 0.2s ease;
 }
 
-.dashboard .kpi-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-/* TITLE */
-.dashboard .kpi-card h3 {
-    font-size: 12px;
-    color: #6b7280;
-    margin-bottom: 6px;
-}
-
-/* VALUE */
 .dashboard .kpi-card p {
     font-size: 22px;
     font-weight: 700;
-    color: #111827;
 }
 
-/* =========================
-   TABLE
-========================= */
+/* TABLE */
 .dashboard .table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.dashboard .table th {
-    font-size: 12px;
-    color: #6b7280;
-    padding: 12px;
-    text-align: left;
-}
-
 .dashboard .table td {
-    padding: 12px;
+    padding: 10px;
     border-top: 1px solid #e5e7eb;
 }
 
-/* ROW HOVER */
-.dashboard .table tr:hover {
-    background: #f9fafb;
+/* 🔥 NEW TABS */
+.tabs {
+    display: flex;
+    gap: 10px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.tab {
+    padding: 10px 14px;
+    cursor: pointer;
+    background: #f3f4f6;
+    border-radius: 8px 8px 0 0;
+    font-size: 14px;
+}
+
+.tab.active {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-bottom: none;
+    font-weight: 600;
+}
+
+/* REPORT */
+#reportContainer {
+    min-height: 120px;
 }
