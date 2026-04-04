@@ -1,62 +1,11 @@
 /* =========================
-   🔥 GLOBAL LOADER (SAFE)
+   🔥 GLOBAL LOADER SYSTEM
 ========================= */
 
 let progress = 0;
 let interval = null;
 
-function createLoader(){
-
-    if (document.getElementById("loaderBar")) return;
-
-    const bar = document.createElement("div");
-    bar.id = "loaderBar";
-
-    const fill = document.createElement("div");
-    fill.id = "loaderFill";
-
-    const text = document.createElement("div");
-    text.id = "loaderText";
-
-    bar.appendChild(fill);
-    document.body.appendChild(bar);
-    document.body.appendChild(text);
-
-    // inject CSS dynamically (no file touch)
-    const style = document.createElement("style");
-    style.innerHTML = `
-        #loaderBar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 3px;
-            width: 100%;
-            background: #e5e7eb;
-            z-index: 9999;
-        }
-
-        #loaderFill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #4f46e5, #22c55e);
-            transition: width 0.2s ease;
-        }
-
-        #loaderText {
-            position: fixed;
-            top: 5px;
-            right: 10px;
-            font-size: 11px;
-            color: #374151;
-            z-index: 9999;
-        }
-    `;
-    document.head.appendChild(style);
-}
-
 function startLoader(){
-
-    createLoader();
 
     progress = 0;
     updateLoader();
@@ -66,7 +15,7 @@ function startLoader(){
     interval = setInterval(() => {
 
         if (progress < 85) {
-            progress += Math.random() * 8;
+            progress += Math.random() * 10; // fake progress feel
             updateLoader();
         }
 
@@ -83,32 +32,32 @@ function stopLoader(){
     setTimeout(() => {
         progress = 0;
         updateLoader();
-    }, 400);
+    }, 500);
 }
 
 function updateLoader(){
 
-    const fill = document.getElementById("loaderFill");
+    const bar = document.getElementById("loaderFill");
     const text = document.getElementById("loaderText");
 
-    if (!fill || !text) return;
+    if (!bar || !text) return;
 
-    fill.style.width = progress + "%";
+    bar.style.width = progress + "%";
     text.innerText = Math.floor(progress) + "%";
 }
 
 /* =========================
-   🔥 HOOK INTO APP LOAD
+   🔥 AUTO HOOKS
 ========================= */
 
+// App start
 window.addEventListener("load", () => {
-
     startLoader();
 
+    // simulate load completion
     setTimeout(() => {
         stopLoader();
-    }, 700);
-
+    }, 800);
 });
 
 /* =========================
