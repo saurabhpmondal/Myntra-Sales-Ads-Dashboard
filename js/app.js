@@ -1,28 +1,17 @@
-import { loadInitialData } from "./core/dataLoader.js";
-import { parseCSV } from "./core/dataParser.js";
-import { normalizeDataset } from "./core/normalizationService.js";
-import { setData } from "./core/stateManager.js";
-import { loadModule } from "./router/appRouter.js";
+import { loadAllData } from "./core/dataLoader.js";
+import { renderFilters } from "./ui/filters.js";
+import { runDashboard } from "./modules/dashboard/binder.js";
 
-import { renderSidebar } from "./ui/layout/sidebar.js";
-import { renderHeader } from "./ui/layout/header.js";
-import { renderFilters } from "./filters/ui.js";
+async function initApp() {
 
-async function init() {
+    const rawData = await loadAllData();
 
-    renderSidebar();
-    renderHeader();
+    window.APP_DATA = rawData;
+
     renderFilters();
 
-    const raw = await loadInitialData();
+    runDashboard();
 
-    for (let key in raw) {
-        const parsed = parseCSV(raw[key]);
-        const normalized = normalizeDataset(key, parsed);
-        setData(key, normalized);
-    }
-
-    loadModule("dashboard");
 }
 
-init();
+initApp();
