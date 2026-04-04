@@ -1,15 +1,25 @@
-export const DATA_REGISTRY = {
+import { parseCSV } from "./dataParser.js";
+import { normalizeData } from "./normalizationService.js";
 
-    CDR: {
-        url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGOsj66mo-CpS5eTerQgEcjYvr5GuOkQUIQ_9Sy4bwFu6FjGv9wBvCZn5UQBcFB7M-dcuJdbxMxSnj/pub?gid=1175680150&single=true&output=csv",
-        dateField: "date",
-        dateFormat: "YYYYMMDD"
-    },
+let STORE = {};
 
-    SALES: {
-        url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGOsj66mo-CpS5eTerQgEcjYvr5GuOkQUIQ_9Sy4bwFu6FjGv9wBvCZn5UQBcFB7M-dcuJdbxMxSnj/pub?gid=1679615114&single=true&output=csv",
-        dateField: "date",
-        dateFormat: "DD-MM-YYYY"
+export function buildRegistry(rawData) {
+
+    const result = {};
+
+    for (const key in rawData) {
+
+        const parsed = parseCSV(rawData[key]);
+        const normalized = normalizeData(key, parsed);
+
+        result[key] = normalized;
     }
 
-};
+    STORE = result;
+
+    return result;
+}
+
+export function getData(key) {
+    return STORE[key] || [];
+}
