@@ -1,7 +1,9 @@
-import { buildCampaignReport } from "./engine.js";
-import { renderCampaign } from "./ui.js";
+import { buildDailyAdsData } from "./engine.js";
+import { renderDailyAds } from "./ui.js";
 
-export function run() {
-    const data = buildCampaignReport();
-    renderCampaign(data);
+export function runDailyAds() {
+
+    const data = buildDailyAdsData();
+
+    renderDailyAds(data);
 }
