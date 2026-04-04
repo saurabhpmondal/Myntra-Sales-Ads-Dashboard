@@ -1,7 +1,9 @@
-import { buildListings } from "./engine.js";
+import { buildListingsData } from "./engine.js";
 import { renderListings } from "./ui.js";
 
-export function run() {
-    const data = buildListings();
+export function runListings(){
+
+    const data = buildListingsData();
+
     renderListings(data);
 }
