@@ -11,7 +11,7 @@ export function renderDashboard(data) {
         </div>
 
         <div class="card">
-            Dashboard initialized successfully
+            Dashboard base loaded
         </div>
     `;
 }
