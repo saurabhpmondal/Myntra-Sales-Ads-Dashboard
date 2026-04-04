@@ -26,7 +26,9 @@ function parseCSV(text) {
 
     return rows.slice(1).map(row => {
         const obj = {};
-        headers.forEach((h, i) => obj[h.trim()] = row[i]);
+        headers.forEach((h, i) => {
+            obj[h.trim()] = row[i];
+        });
         return obj;
     });
 }
