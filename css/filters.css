@@ -1,0 +1,53 @@
+.filter-bar {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filter-item label {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.filter-item input,
+.filter-item select {
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    min-width: 150px;
+}
+
+.filter-item button {
+    padding: 8px 16px;
+    background: #111827;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* QUICK FILTERS */
+.quick-filters {
+    display: flex;
+    gap: 8px;
+}
+
+.quick-filters button {
+    padding: 6px 12px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.quick-filters button.active {
+    background: #111827;
+    color: #fff;
+}
