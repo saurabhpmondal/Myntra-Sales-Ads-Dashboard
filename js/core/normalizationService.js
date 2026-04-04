@@ -14,26 +14,37 @@ export function normalizeData(dataset, rows) {
     }
 
     if (dataset === "CDR") {
-        return rows.map(r => ({
-            impressions: Number(r.impressions) || 0,
-            clicks: Number(r.clicks) || 0,
-            ad_spend: Number(r.ad_spend) || 0,
-            total_revenue: Number(r.total_revenue) || 0,
-            units_sold_total: Number(r.units_sold_total) || 0,
-            campaign_name: r.campaign_name,
-            date: r.date,
-            month: r.month
-        }));
+        return rows.map(r => {
+
+            // 🔥 FIX: convert YYYYMMDD → YYYY-MM-DD
+            const raw = (r.date || "").toString();
+
+            let formattedDate = "";
+
+            if (raw.length === 8) {
+                formattedDate = `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`;
+            }
+
+            return {
+                impressions: Number(r.impressions) || 0,
+                clicks: Number(r.clicks) || 0,
+                ad_spend: Number(r.ad_spend) || 0,
+                total_revenue: Number(r.total_revenue) || 0,
+                units_sold_total: Number(r.units_sold_total) || 0,
+                campaign_name: r.campaign_name,
+                date: formattedDate // ✅ normalized
+            };
+        });
     }
 
     if (dataset === "CPR") {
         return rows.map(r => ({
             product_id: r.product_id,
             product_name: r.product_name,
+            brand: r.brand,
             spend: Number(r.budget_spend) || 0,
             revenue: Number(r.total_revenue) || 0,
-            units: Number(r.units_sold_total) || 0,
-            campaign_name: r.campaign_name
+            units: Number(r.units_sold_total) || 0
         }));
     }
 
