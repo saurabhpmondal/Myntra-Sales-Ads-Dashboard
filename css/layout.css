@@ -14,6 +14,11 @@ body {
     margin-bottom: 16px;
 }
 
+/* 🔥 FIX GAP */
+#filters {
+    margin-bottom: 20px;
+}
+
 #content {
     display: flex;
     flex-direction: column;
