@@ -19,16 +19,25 @@ export async function loadAllData() {
     return result;
 }
 
+/* ---------- CSV PARSER (FIXED) ---------- */
+
 function parseCSV(text) {
 
-    const rows = text.split("\n").map(r => r.split(","));
-    const headers = rows[0];
+    const rows = text.trim().split("\n").map(r => r.split(","));
+
+    // ✅ CLEAN HEADERS
+    const headers = rows[0].map(h =>
+        h.trim().toLowerCase().replace(/\r/g, "")
+    );
 
     return rows.slice(1).map(row => {
+
         const obj = {};
+
         headers.forEach((h, i) => {
-            obj[h.trim()] = row[i];
+            obj[h] = (row[i] || "").trim();
         });
+
         return obj;
     });
 }
