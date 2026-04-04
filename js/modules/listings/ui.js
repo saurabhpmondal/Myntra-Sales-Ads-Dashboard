@@ -1,66 +1,74 @@
-let fullData = [];
-let visible = 50;
+let currentIndex = 0;
+const PAGE_SIZE = 50;
 
-export function renderListings(data) {
+export function renderListings(data){
 
-    fullData = data;
-    visible = 50;
+    const container = document.getElementById("reportContainer");
 
-    const content = document.getElementById("content");
+    container.innerHTML = `
+        <div class="card table-card">
+            <h3>Listings Performance</h3>
 
-    content.innerHTML = `
-        <div class="card">
-
-            <input id="searchBox" placeholder="Search style ID..." />
-
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Style</th>
-                        <th>Brand</th>
-                        <th>GMV</th>
-                        <th>Units</th>
-                        <th>Spend</th>
-                        <th>Ad Revenue</th>
-                        <th>ROI</th>
-                    </tr>
-                </thead>
-                <tbody id="listingBody"></tbody>
-            </table>
-
-            <button id="loadMore">Load More</button>
-
+            <div class="table-wrapper" id="listTableWrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Style</th>
+                            <th>Brand</th>
+                            <th>GMV</th>
+                            <th>Units</th>
+                            <th>Spend</th>
+                            <th>Revenue</th>
+                            <th>ROI</th>
+                            <th>Imp</th>
+                            <th>Clicks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listBody"></tbody>
+                </table>
+            </div>
         </div>
     `;
 
-    renderRows();
+    currentIndex = 0;
+    loadMore(data);
 
-    document.getElementById("loadMore").onclick = () => {
-        visible += 50;
-        renderRows();
-    };
-
-    document.getElementById("searchBox").oninput = (e) => {
-        const val = e.target.value.toLowerCase();
-        fullData = data.filter(d => d.style.includes(val));
-        visible = 50;
-        renderRows();
+    document.getElementById("listTableWrapper").onscroll = function(){
+        const el = this;
+        if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10){
+            loadMore(data);
+        }
     };
 }
 
-function renderRows() {
+/* ---------- LOAD MORE ---------- */
 
-    const rows = fullData.slice(0, visible).map(r => `
+function loadMore(data){
+
+    const body = document.getElementById("listBody");
+
+    const slice = data.slice(currentIndex, currentIndex + PAGE_SIZE);
+
+    const rows = slice.map(([k,r])=>`
         <tr>
-            <td>${r.style}</td>
+            <td>${k}</td>
             <td>${r.brand}</td>
-            <td>${r.gmv.toFixed(0)}</td>
-            <td>${r.units}</td>
-            <td>${r.spend.toFixed(0)}</td>
-            <td>${r.adRevenue.toFixed(0)}</td>
-            <td>${(r.adRevenue / r.spend || 0).toFixed(2)}</td>
+            <td>${fmt(r.gmv)}</td>
+            <td>${fmt(r.units)}</td>
+            <td>${fmt(r.spend)}</td>
+            <td>${fmt(r.revenue)}</td>
+            <td>${fmt2(r.roi)}</td>
+            <td>${fmt(r.impressions)}</td>
+            <td>${fmt(r.clicks)}</td>
         </tr>
     `).join("");
 
-    document.getElementById("listingBody").innerHTML = rows;
+    body.insertAdjacentHTML("beforeend", rows);
+
+    currentIndex += PAGE_SIZE;
 }
+
+/* ---------- FORMAT ---------- */
+
+function fmt(n){ return Number(n||0).toLocaleString(); }
+function fmt2(n){ return Number(n||0).toFixed(2); }
