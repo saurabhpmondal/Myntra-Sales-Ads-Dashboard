@@ -13,7 +13,6 @@ export function buildDashboard(data) {
         return true;
     });
 
-    // 🔥 FIX → FILTER ADS ALSO
     const ads = (data.CDR || []).filter(r => {
 
         const d = r.date;
@@ -29,6 +28,7 @@ export function buildDashboard(data) {
 
     const brandMap = {};
     const salesTrend = {};
+    const unitsTrend = {};
     const adsTrend = {};
 
     // -------- SALES --------
@@ -55,14 +55,14 @@ export function buildDashboard(data) {
 
         const key = buildDate(r);
 
-        // 🔥 FIX → skip invalid / zero-only noise
         if (!key || revenue <= 0) return;
 
         salesTrend[key] = (salesTrend[key] || 0) + revenue;
+        unitsTrend[key] = (unitsTrend[key] || 0) + qty;
     });
 
-    // 🔥 FIX → SORT + CLEAN TREND
     const cleanedSalesTrend = cleanTrend(salesTrend);
+    const cleanedUnitsTrend = cleanTrend(unitsTrend);
 
     const asp = units ? gmv / units : 0;
 
@@ -99,35 +99,26 @@ export function buildDashboard(data) {
 
     return {
         kpi: { gmv, units, asp, spend, revenue, ctr, roi },
-        charts: { sales: cleanedSalesTrend, ads: adsTrend },
+        charts: {
+            sales: cleanedSalesTrend,
+            units: cleanedUnitsTrend,
+            ads: adsTrend
+        },
         brandMap
     };
 }
 
-/* ---------- CLEAN TREND (KEY FIX) ---------- */
+/* ---------- CLEAN TREND ---------- */
 
 function cleanTrend(trend){
 
     const sortedKeys = Object.keys(trend).sort();
-
     const cleaned = {};
 
     sortedKeys.forEach(k => {
         const v = trend[k];
         if (v > 0) cleaned[k] = v;
     });
-
-    // 🔥 REMOVE LAST POINT IF SUDDEN DROP
-    const keys = Object.keys(cleaned);
-
-    if (keys.length >= 2) {
-        const last = keys[keys.length - 1];
-        const prev = keys[keys.length - 2];
-
-        if (cleaned[last] < cleaned[prev] * 0.5) {
-            delete cleaned[last];
-        }
-    }
 
     return cleaned;
 }
