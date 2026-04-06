@@ -79,3 +79,17 @@
 .daily-ads .card + .card {
     margin-top: 8px;
 }
+
+.kpi-good {
+    border-left: 4px solid #22c55e;
+}
+
+.kpi-bad {
+    border-left: 4px solid #ef4444;
+}
+
+.kpi-signal {
+    font-size: 12px;
+    display: block;
+    margin-top: 4px;
+}
