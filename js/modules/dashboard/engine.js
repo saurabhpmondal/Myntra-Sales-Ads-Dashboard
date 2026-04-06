@@ -16,7 +16,7 @@ export function buildDashboard(data) {
     // 🔥 FIX → FILTER ADS ALSO
     const ads = (data.CDR || []).filter(r => {
 
-        const d = r.date; // already YYYY-MM-DD or similar
+        const d = r.date;
 
         if (state.from && d < state.from) return false;
         if (state.to && d > state.to) return false;
@@ -54,12 +54,19 @@ export function buildDashboard(data) {
         else brandMap[brand].SOR += revenue;
 
         const key = buildDate(r);
+
+        // 🔥 FIX → skip invalid / zero-only noise
+        if (!key || revenue <= 0) return;
+
         salesTrend[key] = (salesTrend[key] || 0) + revenue;
     });
 
+    // 🔥 FIX → SORT + CLEAN TREND
+    const cleanedSalesTrend = cleanTrend(salesTrend);
+
     const asp = units ? gmv / units : 0;
 
-    // -------- ADS (NOW FILTERED) --------
+    // -------- ADS --------
     let spend = 0;
     let revenue = 0;
     let clicks = 0;
@@ -77,6 +84,8 @@ export function buildDashboard(data) {
 
         const d = r.date;
 
+        if (!d || s <= 0) return;
+
         if (!adsTrend[d]) {
             adsTrend[d] = { spend: 0, revenue: 0 };
         }
@@ -90,9 +99,37 @@ export function buildDashboard(data) {
 
     return {
         kpi: { gmv, units, asp, spend, revenue, ctr, roi },
-        charts: { sales: salesTrend, ads: adsTrend },
+        charts: { sales: cleanedSalesTrend, ads: adsTrend },
         brandMap
     };
+}
+
+/* ---------- CLEAN TREND (KEY FIX) ---------- */
+
+function cleanTrend(trend){
+
+    const sortedKeys = Object.keys(trend).sort();
+
+    const cleaned = {};
+
+    sortedKeys.forEach(k => {
+        const v = trend[k];
+        if (v > 0) cleaned[k] = v;
+    });
+
+    // 🔥 REMOVE LAST POINT IF SUDDEN DROP
+    const keys = Object.keys(cleaned);
+
+    if (keys.length >= 2) {
+        const last = keys[keys.length - 1];
+        const prev = keys[keys.length - 2];
+
+        if (cleaned[last] < cleaned[prev] * 0.5) {
+            delete cleaned[last];
+        }
+    }
+
+    return cleaned;
 }
 
 /* ---------- DATE BUILDER ---------- */
