@@ -16,12 +16,12 @@ export function renderDashboard(data) {
         <div class="dashboard">
 
             <div class="kpi-grid">
-                ${kpi("GMV", fmt(k.gmv))}
-                ${kpi("Units", fmt(k.units))}
-                ${kpi("ASP", fmt2(k.asp))}
-                ${kpi("Spend", fmt(k.spend))}
-                ${kpi("Revenue", fmt(k.revenue))}
-                ${kpi("ROI", fmt2(k.roi))}
+                ${kpi("GMV", fmt(k.gmv), "gmv", k)}
+                ${kpi("Units", fmt(k.units), "units", k)}
+                ${kpi("ASP", fmt2(k.asp), "asp", k)}
+                ${kpi("Spend", fmt(k.spend), "spend", k)}
+                ${kpi("Revenue", fmt(k.revenue), "revenue", k)}
+                ${kpi("ROI", fmt2(k.roi), "roi", k)}
             </div>
 
             <div class="card">
@@ -102,9 +102,65 @@ function renderReport(type){
         `<div style="padding:20px">${type.toUpperCase()} coming next</div>`;
 }
 
-function kpi(title, value){
-    return `<div class="kpi-card"><h3>${title}</h3><p>${value}</p></div>`;
+/* =========================
+   🔥 KPI ENHANCEMENT
+========================= */
+
+function kpi(title, value, type, k){
+
+    const signal = getSignal(type, k);
+
+    return `
+        <div class="kpi-card ${signal.class}">
+            <h3>${title}</h3>
+            <p>${value}</p>
+            <span class="kpi-signal">${signal.icon}</span>
+        </div>
+    `;
 }
+
+function getSignal(type, k){
+
+    switch(type){
+
+        case "roi":
+            if (k.roi >= 3) return good();
+            if (k.roi < 1) return bad();
+            return neutral();
+
+        case "spend":
+            if (k.spend > k.revenue) return bad();
+            return neutral();
+
+        case "revenue":
+            if (k.revenue > k.spend) return good();
+            return neutral();
+
+        case "units":
+        case "gmv":
+            return neutral();
+
+        case "asp":
+            return neutral();
+
+        default:
+            return neutral();
+    }
+}
+
+function good(){
+    return { class: "kpi-good", icon: "▲" };
+}
+
+function bad(){
+    return { class: "kpi-bad", icon: "▼" };
+}
+
+function neutral(){
+    return { class: "", icon: "" };
+}
+
+/* ========================= */
 
 function tab(id, name, active=false){
     return `<div class="tab ${active?"active":""}" data-type="${id}">${name}</div>`;
