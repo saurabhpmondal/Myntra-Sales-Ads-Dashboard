@@ -9,7 +9,6 @@ export function buildDailyAdsData() {
     const to = state.to;
     const brand = state.brand;
 
-    // 🔍 FILTERING (date + brand)
     const ads = raw.filter(r => {
 
         const d = r.date;
@@ -44,15 +43,15 @@ export function buildDailyAdsData() {
             };
         }
 
-        // 🔢 SAFE NUMBER PARSING (VERY IMPORTANT)
         const spend = Number(r.ad_spend || 0);
         const impressions = Number(r.impressions || 0);
         const clicks = Number(r.clicks || 0);
 
-        const dUnits = Number(r.direct_units_sold || 0);
+        // 🔥 FIX → FALLBACK LOGIC
+        const dUnits = Number(r.direct_units_sold || r.total_converted_units || 0);
         const iUnits = Number(r.indirect_units_sold || 0);
 
-        const dRev = Number(r.direct_revenue || 0);
+        const dRev = Number(r.direct_revenue || r.total_revenue || 0);
         const iRev = Number(r.indirect_revenue || 0);
 
         map[d].spend += spend;
@@ -66,7 +65,6 @@ export function buildDailyAdsData() {
         map[d].indirect_rev += iRev;
     });
 
-    // 📊 DERIVED METRICS
     Object.values(map).forEach(r => {
 
         r.total_units = r.direct_units + r.indirect_units;
