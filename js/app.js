@@ -1,9 +1,9 @@
 /* =========================
-   🔥 IMPORTS (CRITICAL)
+   🔥 IMPORTS
 ========================= */
 
 import { loadAllData } from "./core/dataLoader.js";
-import { parseAllData } from "./core/dataParser.js";
+import { parseCSV } from "./core/dataParser.js";
 import { setData } from "./core/dataRegistry.js";
 import { renderDashboard } from "./modules/dashboard/ui.js";
 
@@ -14,7 +14,7 @@ import { renderDashboard } from "./modules/dashboard/ui.js";
 window.APP_STATE = {};
 
 /* =========================
-   🔥 LOADER SYSTEM
+   🔥 LOADER
 ========================= */
 
 let progress = 0;
@@ -57,7 +57,7 @@ function updateLoader(){
 }
 
 /* =========================
-   🚀 INIT APP (MAIN FIX)
+   🚀 INIT APP
 ========================= */
 
 async function initApp(){
@@ -69,13 +69,18 @@ async function initApp(){
         // 1. Load raw CSV
         const raw = await loadAllData();
 
-        // 2. Parse CSV → JSON
-        const parsed = parseAllData(raw);
+        // 2. Parse EACH file (IMPORTANT FIX)
+        const parsed = {
+            CDR: parseCSV(raw.CDR),
+            CPR: parseCSV(raw.CPR),
+            PPR: parseCSV(raw.PPR),
+            SALES: parseCSV(raw.SALES),
+            TRAFFIC: parseCSV(raw.TRAFFIC)
+        };
 
         // 3. Store in registry
         setData(parsed);
 
-        // expose globally (for debug)
         window.DATA_REGISTRY = parsed;
 
         // 4. Render dashboard
@@ -89,16 +94,12 @@ async function initApp(){
 }
 
 /* =========================
-   🔥 START APP
+   🔥 START
 ========================= */
 
 window.addEventListener("load", () => {
     initApp();
 });
-
-/* =========================
-   🔥 OPTIONAL GLOBAL
-========================= */
 
 window.startLoader = startLoader;
 window.stopLoader = stopLoader;
