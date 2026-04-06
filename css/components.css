@@ -80,6 +80,7 @@
     margin-top: 8px;
 }
 
+/* KPI COLORS */
 .kpi-good {
     border-left: 4px solid #22c55e;
 }
@@ -92,4 +93,72 @@
     font-size: 12px;
     display: block;
     margin-top: 4px;
+}
+
+/* =========================
+   🔥 TABLE POLISH (SAFE ADD)
+========================= */
+
+/* GENERIC TABLE WRAPPER */
+.table-wrapper {
+    max-height: 420px;
+    overflow: auto;
+}
+
+/* TABLE BASE */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    background: #fff;
+}
+
+/* HEADER */
+.table thead th {
+    position: sticky;
+    top: 0;
+    background: #f9fafb;
+    z-index: 2;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 600;
+}
+
+/* BODY CELLS */
+.table tbody td {
+    padding: 10px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* ZEBRA ROWS */
+.table tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+/* HOVER EFFECT */
+.table tbody tr:hover {
+    background: #f1f5f9;
+}
+
+/* ALIGNMENT */
+.table td:not(:first-child),
+.table th:not(:first-child) {
+    text-align: right;
+}
+
+.table td:first-child,
+.table th:first-child {
+    text-align: left;
+}
+
+/* SMOOTH SCROLLBAR */
+.table-wrapper::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
 }
