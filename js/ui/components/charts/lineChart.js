@@ -1,12 +1,10 @@
-let chartStore = {}; // 🔥 multiple charts support
+let chartStore = {};
 
 export function renderLineChart(id, labels, dataA, dataB, labelA, labelB){
 
     const ctx = document.getElementById(id);
-
     if (!ctx) return;
 
-    // 🔥 destroy only this chart (not global)
     if (chartStore[id]) {
         chartStore[id].destroy();
     }
@@ -19,67 +17,54 @@ export function renderLineChart(id, labels, dataA, dataB, labelA, labelB){
                 {
                     label: labelA,
                     data: dataA,
-                    borderWidth: 2,
-                    tension: 0.35,
-                    pointRadius: 2,
-                    pointHoverRadius: 5
+                    borderColor: "#3b82f6",
+                    yAxisID: "y",
+                    tension: 0.35
                 },
                 {
                     label: labelB,
                     data: dataB,
-                    borderWidth: 2,
-                    tension: 0.35,
-                    pointRadius: 2,
-                    pointHoverRadius: 5
+                    borderColor: "#22c55e",
+                    yAxisID: "y1",
+                    tension: 0.35
                 }
             ]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
-
-            interaction: {
-                mode: "index",
-                intersect: false
-            },
+            interaction: { mode: "index", intersect: false },
 
             plugins: {
-                legend: {
-                    display: true,
-                    labels: {
-                        usePointStyle: true,
-                        boxWidth: 8
-                    }
-                },
                 tooltip: {
                     callbacks: {
-                        label: function(context){
-                            const val = context.raw || 0;
+                        label: function(ctx){
 
-                            // smart formatting
-                            if (val > 1000) {
-                                return context.dataset.label + ": " + val.toLocaleString();
-                            }
-                            return context.dataset.label + ": " + val;
+                            const gmv = dataA[ctx.dataIndex] || 0;
+                            const units = dataB[ctx.dataIndex] || 0;
+                            const asp = units ? gmv / units : 0;
+
+                            return [
+                                "GMV: ₹ " + gmv.toLocaleString(),
+                                "Units: " + units.toLocaleString(),
+                                "ASP: ₹ " + Math.round(asp).toLocaleString()
+                            ];
                         }
                     }
                 }
             },
 
             scales: {
-                x: {
-                    grid: {
-                        display: false
+                y: {
+                    position: "left",
+                    ticks: {
+                        callback: v => v.toLocaleString()
                     }
                 },
-                y: {
-                    grid: {
-                        color: "#f1f5f9"
-                    },
+                y1: {
+                    position: "right",
+                    grid: { drawOnChartArea: false },
                     ticks: {
-                        callback: function(value){
-                            return value.toLocaleString();
-                        }
+                        callback: v => v.toLocaleString()
                     }
                 }
             }
