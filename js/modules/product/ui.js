@@ -1,6 +1,6 @@
 import { renderLineChart } from "../../ui/components/charts/lineChart.js";
 
-let chartRef = null; // 🔥 track chart instance
+let chartRef = null;
 
 export function renderDailyAds(map) {
 
@@ -9,19 +9,16 @@ export function renderDailyAds(map) {
     container.innerHTML = `
         <div class="daily-ads">
 
-            <!-- SELECTORS -->
             <div class="dual-select">
                 <select id="metricA">${options("spend")}</select>
                 <span>vs</span>
                 <select id="metricB">${options("total_rev")}</select>
             </div>
 
-            <!-- CHART -->
             <div class="card">
                 <canvas id="dailyAdsChart"></canvas>
             </div>
 
-            <!-- TABLE -->
             <div class="card table-wrapper">
                 ${table(map)}
             </div>
@@ -29,12 +26,27 @@ export function renderDailyAds(map) {
         </div>
     `;
 
-    // Initial render
     updateChart(map);
 
-    // Events
-    document.getElementById("metricA").onchange = () => updateChart(map);
-    document.getElementById("metricB").onchange = () => updateChart(map);
+    document.getElementById("metricA").onchange = () => handleChange(map);
+    document.getElementById("metricB").onchange = () => handleChange(map);
+}
+
+/* ---------- PREVENT SAME METRIC ---------- */
+
+function handleChange(map){
+
+    const A = document.getElementById("metricA");
+    const B = document.getElementById("metricB");
+
+    if (A.value === B.value) {
+        // 🔥 auto shift B
+        const options = Array.from(B.options);
+        const alt = options.find(o => o.value !== A.value);
+        if (alt) B.value = alt.value;
+    }
+
+    updateChart(map);
 }
 
 /* ---------- OPTIONS ---------- */
@@ -53,7 +65,7 @@ function options(selected) {
     `).join("");
 }
 
-/* ---------- CHART FIX ---------- */
+/* ---------- CHART ---------- */
 
 function updateChart(map) {
 
@@ -65,7 +77,6 @@ function updateChart(map) {
     const dataA = labels.map(d => map[d][A] || 0);
     const dataB = labels.map(d => map[d][B] || 0);
 
-    // 🔥 DESTROY OLD CHART (important)
     if (chartRef && chartRef.destroy) {
         chartRef.destroy();
     }
@@ -75,8 +86,8 @@ function updateChart(map) {
         labels,
         dataA,
         dataB,
-        A,
-        B
+        A.toUpperCase(),
+        B.toUpperCase()
     );
 }
 
