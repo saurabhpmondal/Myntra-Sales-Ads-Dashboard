@@ -69,10 +69,24 @@ export function renderDashboard(data) {
     initTabs();
 }
 
+/* =========================
+   🔥 UPDATED CHART LOGIC
+========================= */
+
 function renderCharts(data) {
+
     const labels = Object.keys(data.charts?.sales || {});
-    const values = Object.values(data.charts?.sales || {});
-    renderLineChart("salesChart", labels, values, [], "Sales", "");
+    const gmv = Object.values(data.charts?.sales || {});
+    const units = Object.values(data.charts?.units || {});
+
+    renderLineChart(
+        "salesChart",
+        labels,
+        gmv,
+        units,
+        "GMV",
+        "Units"
+    );
 }
 
 function initTabs(){
