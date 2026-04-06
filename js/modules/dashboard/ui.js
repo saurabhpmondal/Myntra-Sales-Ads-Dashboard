@@ -70,14 +70,18 @@ export function renderDashboard(data) {
 }
 
 /* =========================
-   🔥 UPDATED CHART LOGIC
+   🔥 FIXED CHART ALIGNMENT
 ========================= */
 
 function renderCharts(data) {
 
-    const labels = Object.keys(data.charts?.sales || {});
-    const gmv = Object.values(data.charts?.sales || {});
-    const units = Object.values(data.charts?.units || {});
+    const sales = data.charts?.sales || {};
+    const unitsMap = data.charts?.units || {};
+
+    const labels = Object.keys(sales);
+
+    const gmv = labels.map(d => sales[d] || 0);
+    const units = labels.map(d => unitsMap[d] || 0); // 🔥 FIX
 
     renderLineChart(
         "salesChart",
@@ -116,9 +120,7 @@ function renderReport(type){
         `<div style="padding:20px">${type.toUpperCase()} coming next</div>`;
 }
 
-/* =========================
-   🔥 KPI ENHANCEMENT
-========================= */
+/* KPI + rest unchanged */
 
 function kpi(title, value, type, k){
 
@@ -150,31 +152,14 @@ function getSignal(type, k){
             if (k.revenue > k.spend) return good();
             return neutral();
 
-        case "units":
-        case "gmv":
-            return neutral();
-
-        case "asp":
-            return neutral();
-
         default:
             return neutral();
     }
 }
 
-function good(){
-    return { class: "kpi-good", icon: "▲" };
-}
-
-function bad(){
-    return { class: "kpi-bad", icon: "▼" };
-}
-
-function neutral(){
-    return { class: "", icon: "" };
-}
-
-/* ========================= */
+function good(){ return { class: "kpi-good", icon: "▲" }; }
+function bad(){ return { class: "kpi-bad", icon: "▼" }; }
+function neutral(){ return { class: "", icon: "" }; }
 
 function tab(id, name, active=false){
     return `<div class="tab ${active?"active":""}" data-type="${id}">${name}</div>`;
