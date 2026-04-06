@@ -1,3 +1,9 @@
+import {
+    updateFileProgress,
+    nextFile,
+    setStage
+} from "../utils/loader.js";
+
 export async function loadAllData() {
 
     const urls = {
@@ -11,9 +17,21 @@ export async function loadAllData() {
     const raw = {};
 
     for (const key in urls) {
+
+        setStage("Fetching");
+        updateFileProgress(key);
+
         const res = await fetch(urls[key]);
-        raw[key] = await res.text();
+        const text = await res.text();
+
+        // estimate rows (safe, no parser change)
+        const rows = text.split("\n").length - 1;
+        updateFileProgress(key, rows);
+
+        raw[key] = text;
+
+        nextFile();
     }
 
-    return raw; // only raw CSV
+    return raw;
 }
