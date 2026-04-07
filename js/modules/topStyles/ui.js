@@ -1,8 +1,12 @@
 let currentLimit = 10;
+let currentBrand = "ALL";
 
 export function renderTopStyles(data){
 
     const container = document.getElementById("reportContainer");
+
+    // 🔥 UNIQUE BRANDS
+    const brands = [...new Set(data.map(d => d.brand).filter(Boolean))];
 
     container.innerHTML = `
         <div class="card table-card">
@@ -11,7 +15,17 @@ export function renderTopStyles(data){
 
             <!-- 🔥 FILTERS -->
             <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap">
-                
+
+                <!-- BRAND -->
+                <div>
+                    <label style="font-size:12px;color:#6b7280">Brand</label>
+                    <select id="brandSelect">
+                        <option value="ALL">All</option>
+                        ${brands.map(b => `<option value="${b}">${b}</option>`).join("")}
+                    </select>
+                </div>
+
+                <!-- TOP N -->
                 <div>
                     <label style="font-size:12px;color:#6b7280">Top N</label>
                     <select id="topNSelect">
@@ -24,7 +38,7 @@ export function renderTopStyles(data){
 
             </div>
 
-            <!-- 🔥 TABLE -->
+            <!-- TABLE -->
             <div class="table-wrapper">
                 <table class="table">
                     <thead>
@@ -47,8 +61,15 @@ export function renderTopStyles(data){
 
     renderRows(data);
 
+    // 🔥 EVENTS
+
     document.getElementById("topNSelect").onchange = function(){
         currentLimit = Number(this.value);
+        renderRows(data);
+    };
+
+    document.getElementById("brandSelect").onchange = function(){
+        currentBrand = this.value;
         renderRows(data);
     };
 }
@@ -57,9 +78,14 @@ export function renderTopStyles(data){
 
 function renderRows(data){
 
-    const body = document.getElementById("topStylesBody");
+    let filtered = data;
 
-    const rows = data
+    // 🔥 BRAND FILTER
+    if (currentBrand !== "ALL"){
+        filtered = filtered.filter(d => d.brand === currentBrand);
+    }
+
+    const rows = filtered
         .slice(0, currentLimit)
         .map(r => `
             <tr>
@@ -73,7 +99,7 @@ function renderRows(data){
             </tr>
         `).join("");
 
-    body.innerHTML = rows;
+    document.getElementById("topStylesBody").innerHTML = rows;
 }
 
 /* ---------- HELPERS ---------- */
