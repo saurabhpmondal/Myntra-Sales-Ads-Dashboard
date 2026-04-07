@@ -6,23 +6,27 @@ export function buildPlacementData() {
 
     const state = window.APP_STATE || {};
 
-    // 🔥 DETERMINE MONTH FILTER
-    let selectedMonth = null;
-
-    if (state.from) {
-        selectedMonth = new Date(state.from).toLocaleString("en-US", { month: "short" }).toUpperCase();
-    } else {
-        // default current month
-        selectedMonth = new Date().toLocaleString("en-US", { month: "short" }).toUpperCase();
+    // 🔥 SAFE MONTH EXTRACTOR
+    function getMonthKey(dateStr){
+        if (!dateStr) return null;
+        return new Date(dateStr)
+            .toLocaleString("en-US", { month: "short" })
+            .toLowerCase();
     }
+
+    const selectedMonth = getMonthKey(state.from) 
+        || new Date().toLocaleString("en-US", { month: "short" }).toLowerCase();
 
     const map = {};
 
     raw.forEach(r => {
 
-        const rowMonth = (r.month || "").toUpperCase();
+        // 🔥 NORMALIZE ROW MONTH
+        const rowMonth = (r.month || "")
+            .toLowerCase()
+            .slice(0,3);   // jan, feb, mar...
 
-        // 🔥 FILTER BY MONTH
+        // 🔥 FILTER
         if (selectedMonth && rowMonth !== selectedMonth) return;
 
         const p = r.placement || "UNKNOWN";
@@ -32,10 +36,8 @@ export function buildPlacementData() {
                 impressions: 0,
                 clicks: 0,
                 spend: 0,
-
                 direct_units: 0,
                 indirect_units: 0,
-
                 direct_rev: 0,
                 indirect_rev: 0
             };
@@ -52,7 +54,6 @@ export function buildPlacementData() {
         map[p].indirect_rev += Number(r.indirect_revenue || 0);
     });
 
-    // 🔥 DERIVED METRICS
     Object.values(map).forEach(r => {
 
         r.total_units = r.direct_units + r.indirect_units;
