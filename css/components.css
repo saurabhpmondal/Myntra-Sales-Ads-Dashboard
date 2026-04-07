@@ -217,3 +217,45 @@
         width: 100%;
     }
 }
+
+/* 🔥 STYLE INTELLIGENCE OVERLAY */
+
+.si-overlay{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    z-index: 9999;
+    overflow-y: auto;
+}
+
+.si-container{
+    padding: 16px;
+}
+
+.si-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.si-header button{
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.si-meta{
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+/* CLICKABLE STYLE */
+.clickable-style{
+    color: #2563eb;
+    cursor: pointer;
+    font-weight: 600;
+}
