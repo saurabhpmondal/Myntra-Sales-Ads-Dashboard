@@ -140,3 +140,29 @@
     display: block;
     margin-top: 4px;
 }
+
+/* =========================
+   🔥 FORCE TABLE CENTER ALIGNMENT (FINAL FIX)
+========================= */
+
+#app table th,
+#app table td {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+/* ensure nested tables also covered */
+#app .table th,
+#app .table td {
+    text-align: center !important;
+}
+
+/* fix header alignment explicitly */
+#app table thead th {
+    text-align: center !important;
+}
+
+/* fix tbody */
+#app table tbody td {
+    text-align: center !important;
+}
