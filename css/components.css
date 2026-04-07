@@ -420,3 +420,41 @@
     margin-top:4px;
     font-size:14px;
 }
+
+/* 🔥 INSIGHTS */
+
+.si-insights{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.si-insight{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px;
+    border-radius:8px;
+    font-size:13px;
+}
+
+.si-insight span{
+    font-size:16px;
+}
+
+/* COLORS */
+
+.si-insight.good{
+    background:#ecfdf5;
+    color:#065f46;
+}
+
+.si-insight.warn{
+    background:#fffbeb;
+    color:#92400e;
+}
+
+.si-insight.bad{
+    background:#fef2f2;
+    color:#991b1b;
+}
