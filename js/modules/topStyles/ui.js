@@ -95,7 +95,9 @@ function renderRows(data){
         .slice(0, currentLimit)
         .map(r => `
             <tr>
-                <td>${r.style_id}</td>
+                <td class="clickable-style" data-style="${r.style_id}">
+    ${r.style_id}
+</td>
                 <td>${r.brand}</td>
                 <td>${fmt(r.units)}</td>
                 <td>${fmt(r.revenue)}</td>
@@ -108,6 +110,13 @@ function renderRows(data){
 
     document.getElementById("topStylesBody").innerHTML = rows;
 }
+
+document.querySelectorAll(".clickable-style").forEach(el=>{
+    el.onclick = ()=>{
+        import("../styleIntelligence/binder.js")
+            .then(m => m.openStyleIntelligence(el.dataset.style));
+    };
+});
 
 /* ---------- HELPERS ---------- */
 
