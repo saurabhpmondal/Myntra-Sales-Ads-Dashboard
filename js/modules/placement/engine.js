@@ -5,51 +5,54 @@ export function buildPlacementData() {
     const raw = getData("PPR") || [];
 
     const state = window.APP_STATE || {};
-    const from = state.from;
-    const to = state.to;
+
+    // 🔥 DETERMINE MONTH FILTER
+    let selectedMonth = null;
+
+    if (state.from) {
+        selectedMonth = new Date(state.from).toLocaleString("en-US", { month: "short" }).toUpperCase();
+    } else {
+        // default current month
+        selectedMonth = new Date().toLocaleString("en-US", { month: "short" }).toUpperCase();
+    }
 
     const map = {};
 
     raw.forEach(r => {
 
-        // 🔥 FIX → PPR may not have date → skip date filtering safely
-        const d = r.date;
+        const rowMonth = (r.month || "").toUpperCase();
 
-        if (d && from && d < from) return;
-        if (d && to && d > to) return;
+        // 🔥 FILTER BY MONTH
+        if (selectedMonth && rowMonth !== selectedMonth) return;
 
-        const p = r.placement_type || "UNKNOWN";
+        const p = r.placement || "UNKNOWN";
 
         if (!map[p]) {
             map[p] = {
                 impressions: 0,
                 clicks: 0,
                 spend: 0,
+
                 direct_units: 0,
                 indirect_units: 0,
+
                 direct_rev: 0,
                 indirect_rev: 0
             };
         }
 
-        map[p].impressions += Number(r.views || 0);
+        map[p].impressions += Number(r.impressions || 0);
         map[p].clicks += Number(r.clicks || 0);
-        map[p].spend += Number(r.ad_spend || 0);
+        map[p].spend += Number(r.budget_spend || 0);
 
-        // 🔥 SAFE FALLBACK
-        const dUnits = Number(r.direct_units_sold || r.direct_units || 0);
-        const iUnits = Number(r.indirect_units_sold || 0);
+        map[p].direct_units += Number(r.units_sold_direct || 0);
+        map[p].indirect_units += Number(r.units_sold_indirect || 0);
 
-        const dRev = Number(r.direct_revenue || 0);
-        const iRev = Number(r.indirect_revenue || 0);
-
-        map[p].direct_units += dUnits;
-        map[p].indirect_units += iUnits;
-
-        map[p].direct_rev += dRev;
-        map[p].indirect_rev += iRev;
+        map[p].direct_rev += Number(r.direct_revenue || 0);
+        map[p].indirect_rev += Number(r.indirect_revenue || 0);
     });
 
+    // 🔥 DERIVED METRICS
     Object.values(map).forEach(r => {
 
         r.total_units = r.direct_units + r.indirect_units;
