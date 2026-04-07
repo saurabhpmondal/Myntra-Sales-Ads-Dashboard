@@ -16,23 +16,47 @@ export function normalizeData(dataset, rows) {
     if (dataset === "CDR") {
         return rows.map(r => {
 
-            // 🔥 FIX: convert YYYYMMDD → YYYY-MM-DD
+            // 🔥 DATE FIX
             const raw = (r.date || "").toString();
-
             let formattedDate = "";
 
             if (raw.length === 8) {
                 formattedDate = `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`;
             }
 
+            // 🔥 SAFE EXTRACTION
+            const dUnits = Number(r.units_sold_direct) || 0;
+            const iUnits = Number(r.units_sold_indirect) || 0;
+
+            const dRev = Number(r.direct_revenue) || 0;
+            const iRev = Number(r.indirect_revenue) || 0;
+
+            // 🔥 FINAL FALLBACK LOGIC (IMPORTANT)
+            const totalUnits =
+                Number(r.units_sold_total) ||
+                (dUnits + iUnits);
+
+            const totalRevenue =
+                Number(r.total_revenue) ||
+                (dRev + iRev);
+
             return {
                 impressions: Number(r.impressions) || 0,
                 clicks: Number(r.clicks) || 0,
                 ad_spend: Number(r.ad_spend) || 0,
-                total_revenue: Number(r.total_revenue) || 0,
-                units_sold_total: Number(r.units_sold_total) || 0,
+
+                // ✅ FIXED VALUES
+                units_sold_total: totalUnits,
+                total_revenue: totalRevenue,
+
+                // ✅ KEEP EXTRA (future safe)
+                direct_units: dUnits,
+                indirect_units: iUnits,
+                direct_revenue: dRev,
+                indirect_revenue: iRev,
+
                 campaign_name: r.campaign_name,
-                date: formattedDate // ✅ normalized
+                date: formattedDate
             };
         });
     }
@@ -54,7 +78,8 @@ export function normalizeData(dataset, rows) {
             spend: Number(r.budget_spend) || 0,
             revenue: Number(r.total_revenue) || 0,
             clicks: Number(r.clicks) || 0,
-            impressions: Number(r.impressions) || 0
+            impressions: Number(r.impressions) || 0,
+            month: r.month // 🔥 keep for placement filter
         }));
     }
 
