@@ -81,7 +81,7 @@ function renderCharts(data) {
     const labels = Object.keys(sales);
 
     const gmv = labels.map(d => sales[d] || 0);
-    const units = labels.map(d => unitsMap[d] || 0); // 🔥 FIX
+    const units = labels.map(d => unitsMap[d] || 0);
 
     renderLineChart(
         "salesChart",
@@ -165,18 +165,25 @@ function tab(id, name, active=false){
     return `<div class="tab ${active?"active":""}" data-type="${id}">${name}</div>`;
 }
 
+/* =========================
+   🔥 SORT FIX ADDED HERE
+========================= */
+
 function brandRows(map={}){
-    return Object.entries(map).map(([b,v])=>`
-        <tr>
-            <td>${b}</td>
-            <td>${fmt(v.gmv)}</td>
-            <td>${fmt(v.units)}</td>
-            <td>${fmt2(v.units ? v.gmv/v.units : 0)}</td>
-            <td>${fmt(v.PPMP)}</td>
-            <td>${fmt(v.SJIT)}</td>
-            <td>${fmt(v.SOR)}</td>
-        </tr>
-    `).join("");
+
+    return Object.entries(map)
+        .sort((a,b) => (b[1].gmv || 0) - (a[1].gmv || 0)) // 🔥 DESC GMV
+        .map(([b,v])=>`
+            <tr>
+                <td>${b}</td>
+                <td>${fmt(v.gmv)}</td>
+                <td>${fmt(v.units)}</td>
+                <td>${fmt2(v.units ? v.gmv/v.units : 0)}</td>
+                <td>${fmt(v.PPMP)}</td>
+                <td>${fmt(v.SJIT)}</td>
+                <td>${fmt(v.SOR)}</td>
+            </tr>
+        `).join("");
 }
 
 function fmt(n){ return Number(n||0).toLocaleString(); }
