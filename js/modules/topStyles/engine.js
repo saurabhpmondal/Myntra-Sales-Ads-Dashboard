@@ -8,46 +8,46 @@ export function buildTopStylesData(){
     const state = window.APP_STATE || {};
     const brandFilter = state.brand;
 
-    // 🔥 MONTH MAP
+    // 🔥 MONTH MAP (SAFE)
     const monthMap = {
         JAN:1, FEB:2, MAR:3, APR:4,
         MAY:5, JUN:6, JUL:7, AUG:8,
         SEP:9, OCT:10, NOV:11, DEC:12
     };
 
-    // 🔥 FIND LATEST MONTH IN DATA
-    let latestYear = 0;
-    let latestMonth = 0;
+    // 🔥 EXTRACT VALID MONTH-YEAR COMBINATIONS
+    const monthSet = new Set();
 
     raw.forEach(r => {
-        const m = monthMap[(r.month || "").toUpperCase()];
+        const m = monthMap[(r.month || "").trim().toUpperCase()];
         const y = Number(r.year);
 
-        if (!m || !y) return;
-
-        if (y > latestYear || (y === latestYear && m > latestMonth)){
-            latestYear = y;
-            latestMonth = m;
+        if (m && y){
+            monthSet.add(`${y}-${m}`);
         }
     });
 
-    // 🔥 LAST MONTH CALC
-    let lastMonth = latestMonth - 1;
-    let lastMonthYear = latestYear;
+    // 🔥 SORT MONTHS (LATEST LAST)
+    const sorted = Array.from(monthSet)
+        .map(v => {
+            const [y,m] = v.split("-").map(Number);
+            return { y, m };
+        })
+        .sort((a,b) => a.y === b.y ? a.m - b.m : a.y - b.y);
 
-    if (lastMonth === 0){
-        lastMonth = 12;
-        lastMonthYear -= 1;
-    }
+    if (!sorted.length) return [];
+
+    const current = sorted[sorted.length - 1];
+    const previous = sorted[sorted.length - 2] || null;
 
     const map = {};
 
     raw.forEach(r => {
 
-        const m = monthMap[(r.month || "").toUpperCase()];
+        const m = monthMap[(r.month || "").trim().toUpperCase()];
         const y = Number(r.year);
 
-        if (!r.style_id || !m) return;
+        if (!r.style_id || !m || !y) return;
         if (brandFilter && r.brand !== brandFilter) return;
 
         const key = r.style_id;
@@ -63,30 +63,33 @@ export function buildTopStylesData(){
             };
         }
 
-        // 🔥 CURRENT (LATEST DATA MONTH)
-        if (m === latestMonth && y === latestYear){
+        // 🔥 CURRENT MONTH
+        if (m === current.m && y === current.y){
             map[key].units += Number(r.qty || 0);
             map[key].revenue += Number(r.final_amount || 0);
         }
 
-        // 🔥 LAST MONTH
-        if (m === lastMonth && y === lastMonthYear){
+        // 🔥 LAST MONTH (IF EXISTS)
+        if (previous && m === previous.m && y === previous.y){
             map[key].last_units += Number(r.qty || 0);
             map[key].last_revenue += Number(r.final_amount || 0);
         }
     });
 
-    const daysPassed = 15; // 🔥 SAFE ASSUMPTION (mid-month)
-    const daysInMonth = 30;
-
     const result = Object.values(map).map(r => {
 
-        const projected = daysPassed ? (r.units / daysPassed) * daysInMonth : 0;
+        // 🔥 PROJECTION (SAFE DEFAULT)
+        const projected = r.units * 2; // simple scaling, stable
 
         let remark = "";
         let className = "";
 
-        if (projected > r.last_units){
+        // 🔥 KEY FIX
+        if (r.last_units === 0){
+            remark = "▲ Grow";
+            className = "kpi-good";
+        }
+        else if (projected > r.last_units){
             remark = "▲ Grow";
             className = "kpi-good";
         } else {
@@ -102,5 +105,6 @@ export function buildTopStylesData(){
         };
     });
 
+    // 🔥 SORT BY CURRENT UNITS
     return result.sort((a,b) => b.units - a.units);
 }
