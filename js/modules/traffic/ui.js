@@ -5,9 +5,15 @@ export function renderTraffic(data){
 
     const container = document.getElementById("reportContainer");
 
+    const period = data.period || {};
+
     container.innerHTML = `
         <div class="card table-card">
             <h3>Traffic Funnel</h3>
+
+            <div style="margin-bottom:10px;font-size:12px;color:#6b7280">
+                Period: ${period.start || "-"} → ${period.end || "-"}
+            </div>
 
             <div class="table-wrapper" id="trafficWrapper">
                 <table class="table">
@@ -30,12 +36,12 @@ export function renderTraffic(data){
     `;
 
     index = 0;
-    load(data);
+    load(data.rows);
 
     document.getElementById("trafficWrapper").onscroll = function(){
         const el = this;
         if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10){
-            load(data);
+            load(data.rows);
         }
     };
 }
