@@ -16,7 +16,7 @@ export function normalizeData(dataset, rows) {
     if (dataset === "CDR") {
         return rows.map(r => {
 
-            // 🔥 DATE FIX (same as your original)
+            // 🔥 DATE FIX (UNCHANGED)
             const raw = (r.date || "").toString();
             let formattedDate = "";
 
@@ -24,29 +24,20 @@ export function normalizeData(dataset, rows) {
                 formattedDate = `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`;
             }
 
-            // 🔥 SAFE NUMBER PARSING (NO BREAK)
-            const unitsTotalRaw = Number(r.units_sold_total);
-            const revenueTotalRaw = Number(r.total_revenue);
-
-            const directUnits = Number(r.units_sold_direct) || 0;
-            const indirectUnits = Number(r.units_sold_indirect) || 0;
-
-            const directRevenue = Number(r.direct_revenue) || 0;
-            const indirectRevenue = Number(r.indirect_revenue) || 0;
-
             return {
                 impressions: Number(r.impressions) || 0,
                 clicks: Number(r.clicks) || 0,
                 ad_spend: Number(r.ad_spend) || 0,
 
-                // ✅ CRITICAL FIX (NO || BUG)
-                units_sold_total: !isNaN(unitsTotalRaw)
-                    ? unitsTotalRaw
-                    : (directUnits + indirectUnits),
+                // ✅ KEEP ORIGINAL (DO NOT TOUCH)
+                total_revenue: Number(r.total_revenue) || 0,
+                units_sold_total: Number(r.units_sold_total) || 0,
 
-                total_revenue: !isNaN(revenueTotalRaw)
-                    ? revenueTotalRaw
-                    : (directRevenue + indirectRevenue),
+                // ✅ ADD EXTRA (NON-BREAKING)
+                direct_units: Number(r.units_sold_direct) || 0,
+                indirect_units: Number(r.units_sold_indirect) || 0,
+                direct_revenue: Number(r.direct_revenue) || 0,
+                indirect_revenue: Number(r.indirect_revenue) || 0,
 
                 campaign_name: r.campaign_name,
                 date: formattedDate
@@ -72,7 +63,7 @@ export function normalizeData(dataset, rows) {
             revenue: Number(r.total_revenue) || 0,
             clicks: Number(r.clicks) || 0,
             impressions: Number(r.impressions) || 0,
-            month: r.month // 🔥 keep for placement
+            month: r.month
         }));
     }
 
