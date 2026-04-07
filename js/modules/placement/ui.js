@@ -1,12 +1,8 @@
-import { buildPlacementData } from "./engine.js";
-
-export function renderPlacement() {
-
-    const data = buildPlacementData();
+export function renderPlacement(data) {
 
     const container = document.getElementById("reportContainer");
 
-    if (!Object.keys(data).length) {
+    if (!data || !Object.keys(data).length) {
         container.innerHTML = `<div style="padding:20px">No Placement Data</div>`;
         return;
     }
