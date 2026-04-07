@@ -259,3 +259,75 @@
     cursor: pointer;
     font-weight: 600;
 }
+
+/* 🔥 STYLE INTELLIGENCE UI */
+
+.si-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+}
+
+.si-sub{
+    font-size:12px;
+    color:#6b7280;
+}
+
+.si-kpi-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:10px;
+    margin-bottom:16px;
+}
+
+.si-kpi{
+    background:#f9fafb;
+    padding:10px;
+    border-radius:8px;
+    text-align:center;
+}
+
+.si-kpi span{
+    font-size:11px;
+    color:#6b7280;
+}
+
+.si-kpi strong{
+    display:block;
+    font-size:14px;
+    margin-top:4px;
+}
+
+/* FUNNEL */
+.si-funnel{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+}
+
+.si-funnel-box{
+    background:#f3f4f6;
+    padding:8px;
+    border-radius:6px;
+    text-align:center;
+    flex:1;
+}
+
+.si-arrow{
+    font-size:14px;
+    color:#9ca3af;
+}
+
+/* COMPARISON */
+.si-compare{
+    display:flex;
+    justify-content:space-around;
+    text-align:center;
+}
+
+.si-compare span{
+    font-size:11px;
+    color:#6b7280;
+}
