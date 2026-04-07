@@ -16,7 +16,7 @@ export function normalizeData(dataset, rows) {
     if (dataset === "CDR") {
         return rows.map(r => {
 
-            // 🔥 DATE FIX
+            // 🔥 DATE FIX (same as your original)
             const raw = (r.date || "").toString();
             let formattedDate = "";
 
@@ -24,36 +24,29 @@ export function normalizeData(dataset, rows) {
                 formattedDate = `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`;
             }
 
-            // 🔥 SAFE EXTRACTION
-            const dUnits = Number(r.units_sold_direct) || 0;
-            const iUnits = Number(r.units_sold_indirect) || 0;
+            // 🔥 SAFE NUMBER PARSING (NO BREAK)
+            const unitsTotalRaw = Number(r.units_sold_total);
+            const revenueTotalRaw = Number(r.total_revenue);
 
-            const dRev = Number(r.direct_revenue) || 0;
-            const iRev = Number(r.indirect_revenue) || 0;
+            const directUnits = Number(r.units_sold_direct) || 0;
+            const indirectUnits = Number(r.units_sold_indirect) || 0;
 
-            // 🔥 FINAL FALLBACK LOGIC (IMPORTANT)
-            const totalUnits =
-                Number(r.units_sold_total) ||
-                (dUnits + iUnits);
-
-            const totalRevenue =
-                Number(r.total_revenue) ||
-                (dRev + iRev);
+            const directRevenue = Number(r.direct_revenue) || 0;
+            const indirectRevenue = Number(r.indirect_revenue) || 0;
 
             return {
                 impressions: Number(r.impressions) || 0,
                 clicks: Number(r.clicks) || 0,
                 ad_spend: Number(r.ad_spend) || 0,
 
-                // ✅ FIXED VALUES
-                units_sold_total: totalUnits,
-                total_revenue: totalRevenue,
+                // ✅ CRITICAL FIX (NO || BUG)
+                units_sold_total: !isNaN(unitsTotalRaw)
+                    ? unitsTotalRaw
+                    : (directUnits + indirectUnits),
 
-                // ✅ KEEP EXTRA (future safe)
-                direct_units: dUnits,
-                indirect_units: iUnits,
-                direct_revenue: dRev,
-                indirect_revenue: iRev,
+                total_revenue: !isNaN(revenueTotalRaw)
+                    ? revenueTotalRaw
+                    : (directRevenue + indirectRevenue),
 
                 campaign_name: r.campaign_name,
                 date: formattedDate
@@ -79,7 +72,7 @@ export function normalizeData(dataset, rows) {
             revenue: Number(r.total_revenue) || 0,
             clicks: Number(r.clicks) || 0,
             impressions: Number(r.impressions) || 0,
-            month: r.month // 🔥 keep for placement filter
+            month: r.month // 🔥 keep for placement
         }));
     }
 
