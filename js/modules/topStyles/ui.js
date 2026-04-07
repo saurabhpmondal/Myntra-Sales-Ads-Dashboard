@@ -13,7 +13,6 @@ export function renderTopStyles(data){
 
             <h3>Top Styles</h3>
 
-            <!-- 🔥 FILTER BAR -->
             <div class="top-style-filters">
 
                 <div class="filter-item search-box">
@@ -35,7 +34,6 @@ export function renderTopStyles(data){
 
             </div>
 
-            <!-- TABLE -->
             <div class="table-wrapper">
                 <table class="table">
                     <thead>
@@ -96,8 +94,8 @@ function renderRows(data){
         .map(r => `
             <tr>
                 <td class="clickable-style" data-style="${r.style_id}">
-    ${r.style_id}
-</td>
+                    ${r.style_id}
+                </td>
                 <td>${r.brand}</td>
                 <td>${fmt(r.units)}</td>
                 <td>${fmt(r.revenue)}</td>
@@ -109,14 +107,15 @@ function renderRows(data){
         `).join("");
 
     document.getElementById("topStylesBody").innerHTML = rows;
-}
 
-document.querySelectorAll(".clickable-style").forEach(el=>{
-    el.onclick = ()=>{
-        import("../styleIntelligence/binder.js")
-            .then(m => m.openStyleIntelligence(el.dataset.style));
-    };
-});
+    // 🔥 FIX: ADD CLICK HANDLER HERE (AFTER RENDER)
+    document.querySelectorAll(".clickable-style").forEach(el=>{
+        el.onclick = ()=>{
+            import("../styleIntelligence/binder.js")
+                .then(m => m.openStyleIntelligence(el.dataset.style));
+        };
+    });
+}
 
 /* ---------- HELPERS ---------- */
 
