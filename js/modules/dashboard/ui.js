@@ -6,6 +6,9 @@ import { runListings } from "../listings/binder.js";
 import { runTraffic } from "../traffic/binder.js";
 import { runAlerts } from "../alerts/binder.js";
 
+// 🔥 NEW IMPORT
+import { runTopStyles } from "../topStyles/binder.js";
+
 export function renderDashboard(data) {
 
     const content = document.getElementById("content");
@@ -58,6 +61,7 @@ export function renderDashboard(data) {
                 ${tab("listings","Listings")}
                 ${tab("traffic","Traffic")}
                 ${tab("alerts","Alerts")}
+                ${tab("topstyles","Top Styles")} <!-- 🔥 NEW TAB -->
             </div>
 
             <div id="reportContainer" class="card"></div>
@@ -115,6 +119,7 @@ function renderReport(type){
     if (type === "listings") return runListings();
     if (type === "traffic") return runTraffic();
     if (type === "alerts") return runAlerts();
+    if (type === "topstyles") return runTopStyles(); // 🔥 NEW
 
     document.getElementById("reportContainer").innerHTML =
         `<div style="padding:20px">${type.toUpperCase()} coming next</div>`;
@@ -172,7 +177,7 @@ function tab(id, name, active=false){
 function brandRows(map={}){
 
     return Object.entries(map)
-        .sort((a,b) => (b[1].gmv || 0) - (a[1].gmv || 0)) // 🔥 DESC GMV
+        .sort((a,b) => (b[1].gmv || 0) - (a[1].gmv || 0))
         .map(([b,v])=>`
             <tr>
                 <td>${b}</td>
