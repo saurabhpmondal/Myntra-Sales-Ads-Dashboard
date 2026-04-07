@@ -6,11 +6,26 @@ export function buildPlacementData() {
 
     const map = {};
 
+    // 🔥 VALID PLACEMENTS (STRICT CONTROL)
+    const VALID = [
+        "top of search",
+        "rest of search",
+        "top of pdp",
+        "rest of pdp",
+        "top of home",
+        "rest of home"
+    ];
+
     raw.forEach(r => {
 
-        const p = (r.placement || "UNKNOWN").toString().trim();
+        // 🔥 CLEAN + NORMALIZE
+        const pRaw = (r.placement || "").toString().trim().toLowerCase();
 
-        if (!p) return;
+        // 🔥 FILTER INVALID
+        if (!VALID.includes(pRaw)) return;
+
+        // 🔥 FORMAT BACK TO PROPER CASE
+        const p = pRaw.replace(/\b\w/g, c => c.toUpperCase());
 
         if (!map[p]) {
             map[p] = {
@@ -27,7 +42,7 @@ export function buildPlacementData() {
         map[p].revenue += Number(r.revenue || 0);
     });
 
-    // 🔥 DERIVED METRICS (ONLY WHAT DATA SUPPORTS)
+    // 🔥 DERIVED METRICS
     Object.values(map).forEach(r => {
 
         r.ctr = r.impressions ? r.clicks / r.impressions : 0;
