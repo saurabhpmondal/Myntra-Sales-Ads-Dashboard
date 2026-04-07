@@ -1,64 +1,37 @@
 import { getData } from "../../core/dataRegistry.js";
 
-export function buildPlacementData(){
+export function buildPlacementData() {
 
     const raw = getData("PPR") || [];
 
-    const state = window.APP_STATE || {};
-    const from = state.from;
-    const to = state.to;
-    const brand = state.brand;
-
-    const data = raw.filter(r => {
-
-        const d = r.date;
-        if (!d) return false;
-
-        if (from && d < from) return false;
-        if (to && d > to) return false;
-
-        if (brand && r.brand && r.brand !== brand) return false;
-
-        return true;
-    });
-
     const map = {};
 
-    data.forEach(r => {
+    raw.forEach(r => {
 
-        const key = r.placement_type || "Unknown";
+        const p = (r.placement || "UNKNOWN").toString().trim();
 
-        if (!map[key]) {
-            map[key] = {
+        if (!p) return;
+
+        if (!map[p]) {
+            map[p] = {
                 impressions: 0,
                 clicks: 0,
                 spend: 0,
-
-                direct_units: 0,
-                indirect_units: 0,
-
-                direct_rev: 0,
-                indirect_rev: 0
+                revenue: 0
             };
         }
 
-        map[key].impressions += Number(r.views || 0);
-        map[key].clicks += Number(r.clicks || 0);
-        map[key].spend += Number(r.ad_spend || 0);
-
-        map[key].direct_units += Number(r.direct_units_sold || 0);
-        map[key].indirect_units += Number(r.indirect_units_sold || 0);
-
-        map[key].direct_rev += Number(r.direct_revenue || 0);
-        map[key].indirect_rev += Number(r.indirect_revenue || 0);
+        map[p].impressions += Number(r.impressions || 0);
+        map[p].clicks += Number(r.clicks || 0);
+        map[p].spend += Number(r.spend || 0);
+        map[p].revenue += Number(r.revenue || 0);
     });
 
+    // 🔥 DERIVED METRICS (ONLY WHAT DATA SUPPORTS)
     Object.values(map).forEach(r => {
 
-        r.units = r.direct_units + r.indirect_units;
-        r.revenue = r.direct_rev + r.indirect_rev;
-
         r.ctr = r.impressions ? r.clicks / r.impressions : 0;
+        r.cpc = r.clicks ? r.spend / r.clicks : 0;
         r.roi = r.spend ? r.revenue / r.spend : 0;
     });
 
