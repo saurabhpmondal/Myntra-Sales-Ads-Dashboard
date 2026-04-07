@@ -4,8 +4,6 @@ let searchText = "";
 
 export function renderTopStyles(data){
 
-    console.log("NEW UI LOADED"); // 🔥 DEBUG
-
     const container = document.getElementById("reportContainer");
 
     const brands = [...new Set(data.map(d => d.brand).filter(Boolean))];
@@ -15,28 +13,21 @@ export function renderTopStyles(data){
 
             <h3>Top Styles</h3>
 
-            <!-- FILTERS -->
-            <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+            <!-- 🔥 FILTER BAR -->
+            <div class="top-style-filters">
 
-                <!-- SEARCH -->
-                <div>
-                    <label style="font-size:12px;color:#6b7280">Search</label>
-                    <input id="styleSearch" placeholder="Search style..."
-                        style="padding:8px;border:1px solid #ccc;border-radius:6px;" />
+                <div class="filter-item search-box">
+                    <input id="styleSearch" placeholder="Search style..." />
                 </div>
 
-                <!-- BRAND -->
-                <div>
-                    <label style="font-size:12px;color:#6b7280">Brand</label>
+                <div class="filter-item">
                     <select id="brandSelect">
-                        <option value="ALL">All</option>
+                        <option value="ALL">All Brands</option>
                         ${brands.map(b => `<option value="${b}">${b}</option>`).join("")}
                     </select>
                 </div>
 
-                <!-- TOP N -->
-                <div>
-                    <label style="font-size:12px;color:#6b7280">Top</label>
+                <div class="filter-item small">
                     <select id="topNSelect">
                         ${opt(10)}${opt(20)}${opt(50)}${opt(100)}
                     </select>
@@ -44,6 +35,7 @@ export function renderTopStyles(data){
 
             </div>
 
+            <!-- TABLE -->
             <div class="table-wrapper">
                 <table class="table">
                     <thead>
@@ -83,6 +75,8 @@ export function renderTopStyles(data){
     };
 }
 
+/* ---------- RENDER ---------- */
+
 function renderRows(data){
 
     let filtered = data;
@@ -114,6 +108,8 @@ function renderRows(data){
 
     document.getElementById("topStylesBody").innerHTML = rows;
 }
+
+/* ---------- HELPERS ---------- */
 
 function opt(n){
     return `<option value="${n}" ${n===10?"selected":""}>${n}</option>`;
