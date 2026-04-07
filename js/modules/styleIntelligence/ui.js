@@ -34,6 +34,19 @@ export function renderStyleIntelligence(data){
                 ${kpi("CVR", data.kpi.cvr)}
             </div>
 
+            <!-- 🔥 INSIGHTS (ADDED) -->
+            <div class="card">
+                <h3>Insights</h3>
+                <div class="si-insights">
+                    ${(data.insights || []).map(i => `
+                        <div class="si-insight ${i.type}">
+                            <span>${i.icon}</span>
+                            <p>${i.text}</p>
+                        </div>
+                    `).join("")}
+                </div>
+            </div>
+
             <!-- TREND -->
             <div class="card">
                 <h3>Sales Trend</h3>
