@@ -1,11 +1,11 @@
 let currentLimit = 10;
 let currentBrand = "ALL";
+let searchText = "";
 
 export function renderTopStyles(data){
 
     const container = document.getElementById("reportContainer");
 
-    // 🔥 UNIQUE BRANDS
     const brands = [...new Set(data.map(d => d.brand).filter(Boolean))];
 
     container.innerHTML = `
@@ -15,6 +15,13 @@ export function renderTopStyles(data){
 
             <!-- 🔥 FILTERS -->
             <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+
+                <!-- SEARCH -->
+                <div>
+                    <label style="font-size:12px;color:#6b7280">Search Style</label>
+                    <input id="styleSearch" placeholder="Enter style id..."
+                        style="padding:8px;border:1px solid #d1d5db;border-radius:6px;" />
+                </div>
 
                 <!-- BRAND -->
                 <div>
@@ -38,7 +45,7 @@ export function renderTopStyles(data){
 
             </div>
 
-            <!-- TABLE -->
+            <!-- 🔥 TABLE -->
             <div class="table-wrapper">
                 <table class="table">
                     <thead>
@@ -49,6 +56,7 @@ export function renderTopStyles(data){
                             <th>Revenue</th>
                             <th>Last Units</th>
                             <th>Last Revenue</th>
+                            <th>% Growth</th>
                             <th>Remark</th>
                         </tr>
                     </thead>
@@ -61,7 +69,7 @@ export function renderTopStyles(data){
 
     renderRows(data);
 
-    // 🔥 EVENTS
+    // EVENTS
 
     document.getElementById("topNSelect").onchange = function(){
         currentLimit = Number(this.value);
@@ -72,9 +80,14 @@ export function renderTopStyles(data){
         currentBrand = this.value;
         renderRows(data);
     };
+
+    document.getElementById("styleSearch").oninput = function(){
+        searchText = this.value.toLowerCase();
+        renderRows(data);
+    };
 }
 
-/* ---------- RENDER ROWS ---------- */
+/* ---------- RENDER ---------- */
 
 function renderRows(data){
 
@@ -83,6 +96,13 @@ function renderRows(data){
     // 🔥 BRAND FILTER
     if (currentBrand !== "ALL"){
         filtered = filtered.filter(d => d.brand === currentBrand);
+    }
+
+    // 🔥 SEARCH FILTER
+    if (searchText){
+        filtered = filtered.filter(d =>
+            (d.style_id || "").toString().toLowerCase().includes(searchText)
+        );
     }
 
     const rows = filtered
@@ -95,6 +115,7 @@ function renderRows(data){
                 <td>${fmt(r.revenue)}</td>
                 <td>${fmt(r.last_units)}</td>
                 <td>${fmt(r.last_revenue)}</td>
+                <td class="${growthClass(r.growth)}">${pct(r.growth)}</td>
                 <td class="${r.className}">${r.remark}</td>
             </tr>
         `).join("");
@@ -110,4 +131,14 @@ function option(n){
 
 function fmt(n){
     return Number(n || 0).toLocaleString();
+}
+
+function pct(n){
+    return (n || 0).toFixed(1) + "%";
+}
+
+function growthClass(n){
+    if (n > 0) return "kpi-good";
+    if (n < 0) return "kpi-bad";
+    return "";
 }
