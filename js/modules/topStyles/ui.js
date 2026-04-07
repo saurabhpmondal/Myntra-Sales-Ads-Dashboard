@@ -55,6 +55,19 @@ export function renderTopStyles(data){
         </div>
     `;
 
+    // 🔥 EVENT DELEGATION (ONE TIME BIND)
+    document.getElementById("topStylesBody").onclick = function(e){
+
+        const cell = e.target.closest(".clickable-style");
+
+        if (!cell) return;
+
+        const styleId = cell.dataset.style;
+
+        import("../styleIntelligence/binder.js")
+            .then(m => m.openStyleIntelligence(styleId));
+    };
+
     renderRows(data);
 
     document.getElementById("topNSelect").onchange = e=>{
@@ -107,14 +120,6 @@ function renderRows(data){
         `).join("");
 
     document.getElementById("topStylesBody").innerHTML = rows;
-
-    // 🔥 FIX: ADD CLICK HANDLER HERE (AFTER RENDER)
-    document.querySelectorAll(".clickable-style").forEach(el=>{
-        el.onclick = ()=>{
-            import("../styleIntelligence/binder.js")
-                .then(m => m.openStyleIntelligence(el.dataset.style));
-        };
-    });
 }
 
 /* ---------- HELPERS ---------- */
