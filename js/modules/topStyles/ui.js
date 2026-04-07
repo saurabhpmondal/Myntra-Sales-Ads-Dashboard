@@ -4,6 +4,8 @@ let searchText = "";
 
 export function renderTopStyles(data){
 
+    console.log("NEW UI LOADED"); // 🔥 DEBUG
+
     const container = document.getElementById("reportContainer");
 
     const brands = [...new Set(data.map(d => d.brand).filter(Boolean))];
@@ -13,14 +15,14 @@ export function renderTopStyles(data){
 
             <h3>Top Styles</h3>
 
-            <!-- 🔥 FILTERS -->
+            <!-- FILTERS -->
             <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap">
 
                 <!-- SEARCH -->
                 <div>
-                    <label style="font-size:12px;color:#6b7280">Search Style</label>
-                    <input id="styleSearch" placeholder="Enter style id..."
-                        style="padding:8px;border:1px solid #d1d5db;border-radius:6px;" />
+                    <label style="font-size:12px;color:#6b7280">Search</label>
+                    <input id="styleSearch" placeholder="Search style..."
+                        style="padding:8px;border:1px solid #ccc;border-radius:6px;" />
                 </div>
 
                 <!-- BRAND -->
@@ -34,18 +36,14 @@ export function renderTopStyles(data){
 
                 <!-- TOP N -->
                 <div>
-                    <label style="font-size:12px;color:#6b7280">Top N</label>
+                    <label style="font-size:12px;color:#6b7280">Top</label>
                     <select id="topNSelect">
-                        ${option(10)}
-                        ${option(20)}
-                        ${option(50)}
-                        ${option(100)}
+                        ${opt(10)}${opt(20)}${opt(50)}${opt(100)}
                     </select>
                 </div>
 
             </div>
 
-            <!-- 🔥 TABLE -->
             <div class="table-wrapper">
                 <table class="table">
                     <thead>
@@ -69,39 +67,33 @@ export function renderTopStyles(data){
 
     renderRows(data);
 
-    // EVENTS
-
-    document.getElementById("topNSelect").onchange = function(){
-        currentLimit = Number(this.value);
+    document.getElementById("topNSelect").onchange = e=>{
+        currentLimit = Number(e.target.value);
         renderRows(data);
     };
 
-    document.getElementById("brandSelect").onchange = function(){
-        currentBrand = this.value;
+    document.getElementById("brandSelect").onchange = e=>{
+        currentBrand = e.target.value;
         renderRows(data);
     };
 
-    document.getElementById("styleSearch").oninput = function(){
-        searchText = this.value.toLowerCase();
+    document.getElementById("styleSearch").oninput = e=>{
+        searchText = e.target.value.toLowerCase();
         renderRows(data);
     };
 }
-
-/* ---------- RENDER ---------- */
 
 function renderRows(data){
 
     let filtered = data;
 
-    // 🔥 BRAND FILTER
     if (currentBrand !== "ALL"){
         filtered = filtered.filter(d => d.brand === currentBrand);
     }
 
-    // 🔥 SEARCH FILTER
     if (searchText){
         filtered = filtered.filter(d =>
-            (d.style_id || "").toString().toLowerCase().includes(searchText)
+            String(d.style_id).toLowerCase().includes(searchText)
         );
     }
 
@@ -123,19 +115,12 @@ function renderRows(data){
     document.getElementById("topStylesBody").innerHTML = rows;
 }
 
-/* ---------- HELPERS ---------- */
-
-function option(n){
+function opt(n){
     return `<option value="${n}" ${n===10?"selected":""}>${n}</option>`;
 }
 
-function fmt(n){
-    return Number(n || 0).toLocaleString();
-}
-
-function pct(n){
-    return (n || 0).toFixed(1) + "%";
-}
+function fmt(n){ return Number(n||0).toLocaleString(); }
+function pct(n){ return (n||0).toFixed(1)+"%"; }
 
 function growthClass(n){
     if (n > 0) return "kpi-good";
