@@ -9,14 +9,32 @@ export function buildTrafficData(){
     const to = state.to;
     const brand = state.brand;
 
+    if (!raw.length) return [];
+
+    // 🔥 FIND LATEST WEEK
+    let latest = raw[0];
+    raw.forEach(r => {
+        if (r.end_date > latest.end_date) {
+            latest = r;
+        }
+    });
+
+    const latestStart = latest.start_date;
+    const latestEnd = latest.end_date;
+
     const data = raw.filter(r => {
 
-        const d = r.date;
+        const start = r.start_date;
+        const end = r.end_date;
 
-        if (d){
-            if (from && d < from) return false;
-            if (to && d > to) return false;
+        // 🔥 DEFAULT → latest week only
+        if (!from && !to) {
+            if (start !== latestStart || end !== latestEnd) return false;
         }
+
+        // 🔥 FILTER → overlap logic
+        if (from && end < from) return false;
+        if (to && start > to) return false;
 
         if (brand && r.brand && r.brand !== brand) return false;
 
@@ -27,7 +45,7 @@ export function buildTrafficData(){
 
     data.forEach(r => {
 
-        const key = r.style_id || r.sku;
+        const key = r.style_id || "Unknown";
 
         if (!map[key]) {
             map[key] = {
@@ -42,13 +60,9 @@ export function buildTrafficData(){
         map[key].impressions += Number(r.impressions || 0);
         map[key].clicks += Number(r.clicks || 0);
 
-        if (r.event_type === "add_to_cart") {
-            map[key].atc += Number(r.item_quantity || 0);
-        }
-
-        if (r.event_type === "purchase") {
-            map[key].orders += Number(r.item_quantity || 0);
-        }
+        // 🔥 FIXED (NO EVENT TYPE)
+        map[key].atc += Number(r.atc || 0);
+        map[key].orders += Number(r.orders || 0);
     });
 
     Object.values(map).forEach(r => {
@@ -56,6 +70,14 @@ export function buildTrafficData(){
         r.cvr = r.clicks ? r.orders / r.clicks : 0;
     });
 
-    return Object.entries(map)
-        .sort((a,b)=>b[1].impressions - a[1].impressions);
+    return {
+        rows: Object.entries(map)
+            .sort((a,b)=>b[1].impressions - a[1].impressions),
+
+        // 🔥 PASS PERIOD INFO
+        period: {
+            start: latestStart,
+            end: latestEnd
+        }
+    };
 }
