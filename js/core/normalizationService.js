@@ -1,77 +1,50 @@
 /* =========================
-   🔥 NORMALIZATION SERVICE
+   🔥 NORMALIZATION SERVICE (SAFE MODE)
+   - No structure changes
+   - No key renaming
+   - Only light numeric cleanup
 ========================= */
 
 export function normalizeData(key, data) {
 
-    // Safety check
+    // Safety
     if (!data || !Array.isArray(data)) return [];
 
-    switch (key) {
+    return data.map(row => {
 
-        /* =========================
-           ADS DATA (CDR)
-        ========================= */
-        case "CDR":
-            return data.map(r => ({
-                ...r,
-                ad_spend: num(r.ad_spend),
-                impressions: num(r.impressions || r.views),
-                clicks: num(r.clicks),
-                total_revenue: num(r.total_revenue || r.total_revenue_(rs.)),
-                direct_units_sold: num(r.direct_units_sold),
-                indirect_units_sold: num(r.indirect_units_sold)
-            }));
+        const r = { ...row };
 
-        /* =========================
-           PLACEMENT DATA (PPR)
-        ========================= */
-        case "PPR":
-            return data.map(r => ({
-                ...r,
-                impressions: num(r.impressions || r.views),
-                clicks: num(r.clicks),
-                budget_spend: num(r.budget_spend || r.ad_spend),
+        // 🔢 convert only obvious numeric fields if present
+        convert(r, "ad_spend");
+        convert(r, "budget_spend");
+        convert(r, "impressions");
+        convert(r, "views");
+        convert(r, "clicks");
 
-                units_sold_direct: num(r.units_sold_direct),
-                units_sold_indirect: num(r.units_sold_indirect),
+        convert(r, "direct_units_sold");
+        convert(r, "indirect_units_sold");
+        convert(r, "units_sold_direct");
+        convert(r, "units_sold_indirect");
+        convert(r, "units_sold_total");
 
-                direct_revenue: num(r.direct_revenue),
-                indirect_revenue: num(r.indirect_revenue)
-            }));
+        convert(r, "direct_revenue");
+        convert(r, "indirect_revenue");
+        convert(r, "total_revenue");
+        convert(r, "total_revenue_(rs.)");
 
-        /* =========================
-           SALES DATA
-        ========================= */
-        case "SALES":
-            return data.map(r => ({
-                ...r,
-                final_amount: num(r.final_amount),
-                qty: num(r.qty)
-            }));
+        convert(r, "final_amount");
+        convert(r, "qty");
 
-        /* =========================
-           TRAFFIC
-        ========================= */
-        case "TRAFFIC":
-            return data.map(r => ({
-                ...r,
-                impressions: num(r.impressions),
-                clicks: num(r.clicks)
-            }));
-
-        /* =========================
-           DEFAULT (SAFE PASS)
-        ========================= */
-        default:
-            return data;
-    }
+        return r;
+    });
 }
 
 /* =========================
    🔧 HELPER
 ========================= */
 
-function num(v){
-    return Number(v || 0);
+function convert(obj, key){
+    if (obj[key] !== undefined && obj[key] !== "") {
+        obj[key] = Number(obj[key]) || 0;
+    }
 }
