@@ -6,7 +6,7 @@ export function buildPlacementData() {
 
     const map = {};
 
-    // 🔥 VALID PLACEMENTS (STRICT CONTROL)
+    // 🔥 VALID PLACEMENTS
     const VALID = [
         "top of search",
         "rest of search",
@@ -18,13 +18,10 @@ export function buildPlacementData() {
 
     raw.forEach(r => {
 
-        // 🔥 CLEAN + NORMALIZE
         const pRaw = (r.placement || "").toString().trim().toLowerCase();
 
-        // 🔥 FILTER INVALID
         if (!VALID.includes(pRaw)) return;
 
-        // 🔥 FORMAT BACK TO PROPER CASE
         const p = pRaw.replace(/\b\w/g, c => c.toUpperCase());
 
         if (!map[p]) {
@@ -32,7 +29,12 @@ export function buildPlacementData() {
                 impressions: 0,
                 clicks: 0,
                 spend: 0,
-                revenue: 0
+                revenue: 0,
+
+                // 🔥 ADDED
+                direct_units: 0,
+                indirect_units: 0,
+                total_units: 0
             };
         }
 
@@ -40,9 +42,13 @@ export function buildPlacementData() {
         map[p].clicks += Number(r.clicks || 0);
         map[p].spend += Number(r.spend || 0);
         map[p].revenue += Number(r.revenue || 0);
+
+        // 🔥 UNITS FIX
+        map[p].direct_units += Number(r.direct_units_sold || 0);
+        map[p].indirect_units += Number(r.indirect_units_sold || 0);
+        map[p].total_units += Number(r.units_sold_total || 0);
     });
 
-    // 🔥 DERIVED METRICS
     Object.values(map).forEach(r => {
 
         r.ctr = r.impressions ? r.clicks / r.impressions : 0;
