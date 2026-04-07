@@ -8,20 +8,15 @@ export function buildPlacementData() {
     const from = state.from;
     const to = state.to;
 
-    const filtered = raw.filter(r => {
-
-        const d = r.date;
-        if (!d) return false;
-
-        if (from && d < from) return false;
-        if (to && d > to) return false;
-
-        return true;
-    });
-
     const map = {};
 
-    filtered.forEach(r => {
+    raw.forEach(r => {
+
+        // 🔥 FIX → PPR may not have date → skip date filtering safely
+        const d = r.date;
+
+        if (d && from && d < from) return;
+        if (d && to && d > to) return;
 
         const p = r.placement_type || "UNKNOWN";
 
@@ -41,14 +36,20 @@ export function buildPlacementData() {
         map[p].clicks += Number(r.clicks || 0);
         map[p].spend += Number(r.ad_spend || 0);
 
-        map[p].direct_units += Number(r.direct_units_sold || 0);
-        map[p].indirect_units += Number(r.indirect_units_sold || 0);
+        // 🔥 SAFE FALLBACK
+        const dUnits = Number(r.direct_units_sold || r.direct_units || 0);
+        const iUnits = Number(r.indirect_units_sold || 0);
 
-        map[p].direct_rev += Number(r.direct_revenue || 0);
-        map[p].indirect_rev += Number(r.indirect_revenue || 0);
+        const dRev = Number(r.direct_revenue || 0);
+        const iRev = Number(r.indirect_revenue || 0);
+
+        map[p].direct_units += dUnits;
+        map[p].indirect_units += iUnits;
+
+        map[p].direct_rev += dRev;
+        map[p].indirect_rev += iRev;
     });
 
-    // 📊 DERIVED
     Object.values(map).forEach(r => {
 
         r.total_units = r.direct_units + r.indirect_units;
