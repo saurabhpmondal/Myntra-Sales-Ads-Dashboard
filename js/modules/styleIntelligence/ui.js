@@ -8,17 +8,19 @@ export function renderStyleIntelligence(data){
     overlay.innerHTML = `
         <div class="si-container">
 
+            <!-- HEADER -->
             <div class="si-header">
-                <h2>Style Intelligence</h2>
+                <div>
+                    <h2>Style Intelligence</h2>
+                    <p class="si-sub">
+                        ${data.style_id} • ${data.brand}
+                    </p>
+                </div>
                 <button id="siClose">✕</button>
             </div>
 
-            <div class="si-meta">
-                Style: ${data.style_id} | Brand: ${data.brand}
-            </div>
-
-            <!-- KPI -->
-            <div class="kpi-grid">
+            <!-- KPI GRID -->
+            <div class="si-kpi-grid">
                 ${kpi("Units", data.kpi.units)}
                 ${kpi("Revenue", data.kpi.revenue)}
                 ${kpi("ASP", data.kpi.asp)}
@@ -38,25 +40,39 @@ export function renderStyleIntelligence(data){
                 <canvas id="siChart"></canvas>
             </div>
 
-            <!-- TRAFFIC -->
+            <!-- FUNNEL -->
             <div class="card">
                 <h3>Traffic Funnel</h3>
-                <p>
-                    Impressions: ${fmt(data.traffic.impressions)} |
-                    Clicks: ${fmt(data.traffic.clicks)} |
-                    ATC: ${fmt(data.traffic.atc)} |
-                    Orders: ${fmt(data.traffic.orders)}
-                </p>
+                <div class="si-funnel">
+                    ${funnel("Impressions", data.traffic.impressions)}
+                    ${arrow()}
+                    ${funnel("Clicks", data.traffic.clicks)}
+                    ${arrow()}
+                    ${funnel("ATC", data.traffic.atc)}
+                    ${arrow()}
+                    ${funnel("Orders", data.traffic.orders)}
+                </div>
             </div>
 
             <!-- COMPARISON -->
             <div class="card">
                 <h3>Month Comparison</h3>
-                <p>
-                    Current: ${fmt(data.comparison.units)} |
-                    Last: ${fmt(data.comparison.last_units)} |
-                    Growth: ${pct(data.comparison.growth)}
-                </p>
+                <div class="si-compare">
+                    <div>
+                        <span>Current</span>
+                        <strong>${fmt(data.comparison.units)}</strong>
+                    </div>
+                    <div>
+                        <span>Last</span>
+                        <strong>${fmt(data.comparison.last_units)}</strong>
+                    </div>
+                    <div>
+                        <span>Growth</span>
+                        <strong class="${growthClass(data.comparison.growth)}">
+                            ${pct(data.comparison.growth)}
+                        </strong>
+                    </div>
+                </div>
             </div>
 
             <!-- FUTURE -->
@@ -75,15 +91,42 @@ export function renderStyleIntelligence(data){
 
     renderLineChart("siChart", labels, values, [], "Revenue", "");
 
-    // close
     document.getElementById("siClose").onclick = ()=>{
         overlay.remove();
     };
 }
 
+/* ---------- UI BLOCKS ---------- */
+
 function kpi(t,v){
-    return `<div class="kpi-card"><h3>${t}</h3><p>${fmt(v)}</p></div>`;
+    return `
+        <div class="si-kpi">
+            <span>${t}</span>
+            <strong>${fmt(v)}</strong>
+        </div>
+    `;
 }
+
+function funnel(t,v){
+    return `
+        <div class="si-funnel-box">
+            <span>${t}</span>
+            <strong>${fmt(v)}</strong>
+        </div>
+    `;
+}
+
+function arrow(){
+    return `<div class="si-arrow">→</div>`;
+}
+
+/* ---------- HELPERS ---------- */
 
 function fmt(n){ return Number(n||0).toLocaleString(); }
 function pct(n){ return (n||0).toFixed(1)+"%"; }
+
+function growthClass(n){
+    if(n > 0) return "kpi-good";
+    if(n < 0) return "kpi-bad";
+    return "";
+}
