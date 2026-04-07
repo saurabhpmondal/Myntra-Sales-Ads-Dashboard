@@ -166,3 +166,54 @@
 #app table tbody td {
     text-align: center !important;
 }
+
+/* 🔥 TOP STYLE FILTER BAR */
+.top-style-filters {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+/* FILTER ITEMS */
+.filter-item {
+    display: flex;
+    align-items: center;
+}
+
+/* SEARCH BOX */
+.filter-item.search-box {
+    flex: 1;
+}
+
+.filter-item.search-box input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* DROPDOWNS */
+.filter-item select {
+    padding: 7px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* SMALL SELECT (Top N) */
+.filter-item.small select {
+    width: 70px;
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 600px) {
+    .top-style-filters {
+        flex-wrap: wrap;
+    }
+
+    .filter-item.search-box {
+        width: 100%;
+    }
+}
