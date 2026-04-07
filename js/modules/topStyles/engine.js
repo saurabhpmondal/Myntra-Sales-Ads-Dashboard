@@ -11,7 +11,7 @@ export function buildTopStylesData(){
 
     const today = new Date();
 
-    const currentMonth = today.getMonth() + 1; // 1-12
+    const currentMonth = today.getMonth() + 1;
     const currentYear = today.getFullYear();
 
     const lastMonthDate = new Date(currentYear, currentMonth - 2, 1);
@@ -21,14 +21,21 @@ export function buildTopStylesData(){
     const daysPassed = today.getDate();
     const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
 
+    // 🔥 FIX: MONTH MAP
+    const monthMap = {
+        JAN:1, FEB:2, MAR:3, APR:4,
+        MAY:5, JUN:6, JUL:7, AUG:8,
+        SEP:9, OCT:10, NOV:11, DEC:12
+    };
+
     const map = {};
 
     raw.forEach(r => {
 
-        const m = Number(r.month);
+        const m = monthMap[(r.month || "").toUpperCase()];
         const y = Number(r.year);
 
-        if (!r.style_id) return;
+        if (!r.style_id || !m) return;
 
         if (brandFilter && r.brand !== brandFilter) return;
 
@@ -60,7 +67,6 @@ export function buildTopStylesData(){
 
     const result = Object.values(map).map(r => {
 
-        // 🔥 PROJECTION
         const projected = daysPassed ? (r.units / daysPassed) * daysInMonth : 0;
 
         let remark = "";
@@ -82,6 +88,5 @@ export function buildTopStylesData(){
         };
     });
 
-    // 🔥 SORT BY CURRENT UNITS
     return result.sort((a,b) => b.units - a.units);
 }
