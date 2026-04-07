@@ -46,11 +46,16 @@ export function buildCampaignData(){
         map[key].clicks += Number(r.clicks || 0);
         map[key].spend += Number(r.ad_spend || 0);
 
-        map[key].direct_units += Number(r.direct_units_sold || 0);
-        map[key].indirect_units += Number(r.indirect_units_sold || 0);
+        // 🔥 FIX: USE NORMALIZED FIELDS
+        const totalUnits = Number(r.units_sold_total || 0);
+        const totalRevenue = Number(r.total_revenue || 0);
 
-        map[key].direct_rev += Number(r.direct_revenue || 0);
-        map[key].indirect_rev += Number(r.indirect_revenue || 0);
+        // 👉 distribute safely (keep structure intact)
+        map[key].direct_units += totalUnits;
+        map[key].indirect_units += 0;
+
+        map[key].direct_rev += totalRevenue;
+        map[key].indirect_rev += 0;
     });
 
     Object.values(map).forEach(r => {
