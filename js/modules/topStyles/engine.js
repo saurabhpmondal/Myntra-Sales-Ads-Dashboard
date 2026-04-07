@@ -79,12 +79,17 @@ export function buildTopStylesData(){
     const result = Object.values(map).map(r => {
 
         // 🔥 PROJECTION (SAFE DEFAULT)
-        const projected = r.units * 2; // simple scaling, stable
+        const projected = r.units * 2;
 
         let remark = "";
         let className = "";
 
-        // 🔥 KEY FIX
+        // 🔥 GROWTH LOGIC (NEW)
+        const growth = r.last_units
+            ? ((projected - r.last_units) / r.last_units) * 100
+            : 100;
+
+        // 🔥 EXISTING REMARK LOGIC (UNCHANGED)
         if (r.last_units === 0){
             remark = "▲ Grow";
             className = "kpi-good";
@@ -100,6 +105,7 @@ export function buildTopStylesData(){
         return {
             ...r,
             projected_units: projected,
+            growth, // 🔥 ADDED
             remark,
             className
         };
