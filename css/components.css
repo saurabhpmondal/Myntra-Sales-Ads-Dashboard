@@ -331,3 +331,92 @@
     font-size:11px;
     color:#6b7280;
 }
+
+/* 🔥 KPI GRID CLEAN */
+
+.si-kpi-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:10px;
+    margin-bottom:16px;
+}
+
+.si-kpi{
+    background:#f8fafc;
+    border:1px solid #e5e7eb;
+    padding:12px;
+    border-radius:10px;
+    text-align:center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.si-kpi span{
+    font-size:11px;
+    color:#6b7280;
+    display:block;
+}
+
+.si-kpi strong{
+    display:block;
+    font-size:16px;
+    margin-top:4px;
+    font-weight:600;
+}
+
+/* 🔥 HEADER IMPROVEMENT */
+
+.si-header h2{
+    font-size:18px;
+    margin:0;
+}
+
+.si-sub{
+    font-size:12px;
+    color:#6b7280;
+}
+
+/* 🔥 FUNNEL CLEAN */
+
+.si-funnel{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:8px;
+}
+
+.si-funnel-box{
+    flex:1;
+    background:#f3f4f6;
+    padding:10px;
+    border-radius:8px;
+    text-align:center;
+}
+
+.si-arrow{
+    font-size:14px;
+    color:#9ca3af;
+}
+
+/* 🔥 COMPARISON */
+
+.si-compare{
+    display:flex;
+    justify-content:space-between;
+    text-align:center;
+    margin-top:10px;
+}
+
+.si-compare div{
+    flex:1;
+}
+
+.si-compare span{
+    font-size:11px;
+    color:#6b7280;
+}
+
+.si-compare strong{
+    display:block;
+    margin-top:4px;
+    font-size:14px;
+}
