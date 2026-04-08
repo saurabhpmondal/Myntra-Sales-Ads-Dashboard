@@ -1,5 +1,4 @@
 import { buildStyleIntelligence } from "../styleIntelligence/engine.js";
-import { renderStyleIntelligence } from "../styleIntelligence/ui.js";
 
 export function renderDeepDive(){
 
@@ -10,19 +9,12 @@ export function renderDeepDive(){
 
             <h3>Deep Dive</h3>
 
-            <div class="top-style-filters">
+            <div class="top-style-filters compact">
 
-                <div class="filter-item search-box">
-                    <input id="ddSearch" placeholder="Enter Style ID..." />
-                </div>
+                <input id="ddSearch" class="compact-input" placeholder="Enter Style ID..." />
 
-                <div class="filter-item">
-                    <button id="ddSearchBtn">Search</button>
-                </div>
-
-                <div class="filter-item">
-                    <button id="ddExportBtn">Export Style</button>
-                </div>
+                <button id="ddSearchBtn" class="compact-btn">Search</button>
+                <button id="ddExportBtn" class="compact-btn">Export</button>
 
             </div>
 
@@ -35,20 +27,13 @@ export function renderDeepDive(){
 
     let currentData = null;
 
-    document.getElementById("ddSearchBtn").onclick = ()=>{
-        runSearch();
-    };
-
-    document.getElementById("ddSearch").onkeypress = (e)=>{
+    document.getElementById("ddSearchBtn").onclick = runSearch;
+    document.getElementById("ddSearch").onkeypress = e=>{
         if (e.key === "Enter") runSearch();
     };
 
     document.getElementById("ddExportBtn").onclick = ()=>{
-        if (!currentData){
-            alert("Search a style first");
-            return;
-        }
-
+        if (!currentData) return alert("Search first");
         exportStyle(currentData);
     };
 
@@ -56,51 +41,72 @@ export function renderDeepDive(){
 
         const styleId = document.getElementById("ddSearch").value.trim();
 
-        if (!styleId){
-            alert("Enter style ID");
-            return;
-        }
+        if (!styleId) return alert("Enter style ID");
 
         const data = buildStyleIntelligence(styleId);
 
-        // ❌ STYLE NOT FOUND
         if (!data || (!data.kpi.units && !data.kpi.revenue)){
-            document.getElementById("ddResult").innerHTML = `
-                <p style="color:red;">❌ Style not found</p>
-            `;
-            currentData = null;
+            document.getElementById("ddResult").innerHTML =
+                `<p style="color:red;">❌ Style not found</p>`;
             return;
         }
 
         currentData = data;
-
-        document.getElementById("ddResult").innerHTML = "";
-        renderStyleIntelligenceInline(data);
+        renderResult(data);
     }
 }
 
-/* ---------- INLINE RENDER ---------- */
+/* ---------- RESULT UI ---------- */
 
-function renderStyleIntelligenceInline(data){
+function renderResult(d){
 
-    const container = document.getElementById("ddResult");
+    const el = document.getElementById("ddResult");
 
-    container.innerHTML = `
+    el.innerHTML = `
         <div class="card">
 
-            <h3>${data.style_id} • ${data.brand}</h3>
+            <h3>${d.style_id} • ${d.brand}</h3>
 
             <div class="si-kpi-grid">
-                ${kpi("Units", data.kpi.units)}
-                ${kpi("Revenue", data.kpi.revenue)}
-                ${kpi("ASP", data.kpi.asp)}
-                ${kpi("ROI", data.kpi.roi)}
-                ${kpi("CVR", data.kpi.cvr)}
+
+                ${kpi("Units", d.kpi.units)}
+                ${kpi("Revenue", d.kpi.revenue)}
+                ${kpi("ASP", d.kpi.asp)}
+
+                ${kpi("Ad Spend", d.kpi.ad_spend)}
+                ${kpi("Ad Revenue", d.kpi.ad_revenue)}
+                ${kpi("ROI", d.kpi.roi)}
+
+                ${kpi("Impressions", d.kpi.impressions)}
+                ${kpi("Clicks", d.kpi.clicks)}
+                ${kpi("CVR", d.kpi.cvr)}
+
+            </div>
+
+            <div class="card">
+                <h3>Traffic Funnel</h3>
+                <div class="si-funnel">
+                    ${box("Impr", d.traffic.impressions)}
+                    → ${box("Clicks", d.traffic.clicks)}
+                    → ${box("ATC", d.traffic.atc)}
+                    → ${box("Orders", d.traffic.orders)}
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Month Comparison</h3>
+                <div class="si-compare">
+                    <div>Current: ${fmt(d.comparison.units)}</div>
+                    <div>Last: ${fmt(d.comparison.last_units)}</div>
+                    <div class="${growthClass(d.comparison.growth)}">
+                        ${pct(d.comparison.growth)}
+                    </div>
+                </div>
             </div>
 
             <div class="card">
                 <h3>Insights</h3>
-                ${(data.insights || []).map(i => `
+                ${(d.insights || []).map(i => `
                     <div class="si-insight ${i.type}">
                         ${i.icon} ${i.text}
                     </div>
@@ -113,34 +119,26 @@ function renderStyleIntelligenceInline(data){
 
 /* ---------- EXPORT ---------- */
 
-function exportStyle(data){
+function exportStyle(d){
 
-    const row = {
-        style_id: data.style_id,
-        brand: data.brand,
-        units: data.kpi.units,
-        revenue: data.kpi.revenue,
-        asp: data.kpi.asp,
-        roi: data.kpi.roi,
-        cvr: data.kpi.cvr
-    };
+    const row = [
+        d.style_id,
+        d.brand,
+        d.kpi.units,
+        d.kpi.revenue,
+        d.kpi.roi,
+        d.kpi.cvr
+    ].join(",");
 
-    const headers = Object.keys(row);
+    const csv = "style,brand,units,revenue,roi,cvr\n" + row;
 
-    const csv = [
-        headers.join(","),
-        headers.map(h => row[h]).join(",")
-    ].join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv" });
+    const blob = new Blob([csv], { type:"text/csv" });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = `style-${data.style_id}.csv`;
+    a.download = `style-${d.style_id}.csv`;
     a.click();
-
-    URL.revokeObjectURL(url);
 }
 
 /* ---------- HELPERS ---------- */
@@ -149,4 +147,15 @@ function kpi(t,v){
     return `<div class="si-kpi"><span>${t}</span><strong>${fmt(v)}</strong></div>`;
 }
 
+function box(t,v){
+    return `<span>${t}: ${fmt(v)}</span>`;
+}
+
 function fmt(n){ return Number(n||0).toLocaleString(); }
+function pct(n){ return (n||0).toFixed(1)+"%"; }
+
+function growthClass(n){
+    if (n > 0) return "kpi-good";
+    if (n < 0) return "kpi-bad";
+    return "";
+}
