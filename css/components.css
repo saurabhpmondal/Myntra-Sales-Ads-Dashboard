@@ -477,3 +477,14 @@
     position: relative;
     z-index: 10;
 }
+
+.deep-dive-btn{
+    cursor:pointer;
+    font-size:16px;
+    position:relative;
+    z-index:10;
+}
+
+.top-style-filters .filter-item button{
+    white-space: nowrap;
+}
