@@ -3,7 +3,7 @@ import { getData } from "../../core/dataRegistry.js";
 export function buildDayWiseData(){
 
     const raw = getData("SALES") || [];
-    if (!raw.length) return [];
+    if (!raw.length) return { months: [], dataMap: {} };
 
     const mMap = {
         JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,
@@ -18,18 +18,18 @@ export function buildDayWiseData(){
         if (m && y) monthSet.add(`${y}-${m}`);
     });
 
-    const sorted = Array.from(monthSet)
+    const months = Array.from(monthSet)
         .map(v=>{
             const [y,m]=v.split("-").map(Number);
-            return {y,m};
+            return {y,m,label:`${monthName(m)} ${y}`};
         })
-        .sort((a,b)=> a.y===b.y ? b.m-a.m : b.y-a.y); // latest first
+        .sort((a,b)=> a.y===b.y ? b.m-a.m : b.y-a.y);
 
-    const today = new Date().getDate();
+    const dataMap = {};
 
-    return sorted.map((cur, index)=>{
+    months.forEach(mo=>{
 
-        const daysInMonth = new Date(cur.y, cur.m, 0).getDate();
+        const daysInMonth = new Date(mo.y, mo.m, 0).getDate();
 
         const map = {};
 
@@ -38,7 +38,7 @@ export function buildDayWiseData(){
             const m = mMap[(r.month||"").trim().toUpperCase()];
             const y = Number(r.year);
 
-            if (m !== cur.m || y !== cur.y) return;
+            if (m !== mo.m || y !== mo.y) return;
 
             const style = r.style_id;
             if (!style) return;
@@ -47,14 +47,14 @@ export function buildDayWiseData(){
                 map[style] = {
                     style_id: style,
                     brand: r.brand || "",
+                    po_type: r.po_type || "NA",
                     total: 0,
                     days: Array(daysInMonth).fill(0)
                 };
             }
 
-            // ✅ DD-MM-YYYY parsing
             const parts = (r.date || "").split("-");
-            const day = Number(parts[0]); // <-- FIXED
+            const day = Number(parts[0]);
 
             const qty = Number(r.qty || 0);
 
@@ -64,23 +64,14 @@ export function buildDayWiseData(){
             }
         });
 
-        let rows = Object.values(map)
+        dataMap[`${mo.y}-${mo.m}`] = Object.values(map)
             .sort((a,b)=> b.total - a.total);
-
-        // ✅ CURRENT MONTH → CUT FUTURE DAYS
-        if (index === 0){
-            rows.forEach(r=>{
-                r.days = r.days.slice(0, today);
-            });
-        }
-
-        return {
-            label: `${monthName(cur.m)} ${cur.y}`,
-            isOpen: index === 0,
-            days: index === 0 ? today : daysInMonth,
-            rows
-        };
     });
+
+    return {
+        months,
+        dataMap
+    };
 }
 
 function monthName(m){
