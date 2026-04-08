@@ -7,7 +7,6 @@ let searchText = "";
 export function renderTopStyles(data){
 
     const container = document.getElementById("reportContainer");
-
     const brands = [...new Set(data.map(d => d.brand).filter(Boolean))];
 
     container.innerHTML = `
@@ -32,6 +31,10 @@ export function renderTopStyles(data){
                     <select id="topNSelect">
                         ${opt(10)}${opt(20)}${opt(50)}${opt(100)}
                     </select>
+                </div>
+
+                <div class="filter-item">
+                    <button id="exportTop50Btn" type="button">Export Top 50</button>
                 </div>
 
             </div>
@@ -74,23 +77,17 @@ export function renderTopStyles(data){
         searchText = e.target.value.toLowerCase();
         renderRows(data);
     };
+
+    document.getElementById("exportTop50Btn").onclick = ()=>{
+        exportTop50(data);
+    };
 }
 
 /* ---------- RENDER ---------- */
 
 function renderRows(data){
 
-    let filtered = data;
-
-    if (currentBrand !== "ALL"){
-        filtered = filtered.filter(d => d.brand === currentBrand);
-    }
-
-    if (searchText){
-        filtered = filtered.filter(d =>
-            String(d.style_id).toLowerCase().includes(searchText)
-        );
-    }
+    const filtered = getFilteredData(data);
 
     const rows = filtered
         .slice(0, currentLimit)
@@ -110,7 +107,6 @@ function renderRows(data){
 
     document.getElementById("topStylesBody").innerHTML = rows;
 
-    // 🔥 CLEAN CLICK HANDLER (ONLY ICON)
     document.querySelectorAll(".deep-dive-btn").forEach(el=>{
         el.onclick = function(){
             const styleId = this.dataset.style;
@@ -119,14 +115,101 @@ function renderRows(data){
     });
 }
 
+/* ---------- FILTER ---------- */
+
+function getFilteredData(data){
+
+    let filtered = [...data];
+
+    if (currentBrand !== "ALL"){
+        filtered = filtered.filter(d => d.brand === currentBrand);
+    }
+
+    if (searchText){
+        filtered = filtered.filter(d =>
+            String(d.style_id).toLowerCase().includes(searchText)
+        );
+    }
+
+    return filtered;
+}
+
+/* ---------- EXPORT ---------- */
+
+function exportTop50(data){
+
+    const filtered = getFilteredData(data).slice(0, 50);
+
+    if (!filtered.length){
+        alert("No styles available to export.");
+        return;
+    }
+
+    const rows = filtered.map(r => ({
+        style_id: r.style_id,
+        brand: r.brand,
+        units: safe(r.units),
+        revenue: safe(r.revenue),
+        last_units: safe(r.last_units),
+        last_revenue: safe(r.last_revenue),
+        growth_percent: Number(r.growth || 0).toFixed(1),
+        remark: r.remark || ""
+    }));
+
+    const headers = Object.keys(rows[0]);
+    const csv = [
+        headers.join(","),
+        ...rows.map(row =>
+            headers.map(h => csvCell(row[h])).join(",")
+        )
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = buildFileName();
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(url);
+}
+
+function buildFileName(){
+    const brandPart = currentBrand === "ALL" ? "all-brands" : slug(currentBrand);
+    return `top-50-styles-${brandPart}.csv`;
+}
+
+function csvCell(value){
+    const text = String(value ?? "");
+    if (text.includes(",") || text.includes('"') || text.includes("\n")){
+        return `"${text.replace(/"/g, '""')}"`;
+    }
+    return text;
+}
+
+function slug(text){
+    return String(text || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
+}
+
 /* ---------- HELPERS ---------- */
 
 function opt(n){
     return `<option value="${n}" ${n===10?"selected":""}>${n}</option>`;
 }
 
+function safe(n){
+    return Number(n || 0);
+}
+
 function fmt(n){ return Number(n||0).toLocaleString(); }
-function pct(n){ return (n||0).toFixed(1)+"%"; }
+function pct(n){ return Number(n||0).toFixed(1)+"%"; }
 
 function growthClass(n){
     if (n > 0) return "kpi-good";
