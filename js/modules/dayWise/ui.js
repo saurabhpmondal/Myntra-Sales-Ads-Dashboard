@@ -14,7 +14,7 @@ export function renderDayWise(data){
             <div class="top-style-filters">
                 <select id="dwBrand">
                     <option value="ALL">All Brands</option>
-                    ${brands.map(b=>`<option>${b}</option>`).join("")}
+                    ${brands.map(b=>`<option value="${b}">${b}</option>`).join("")}
                 </select>
             </div>
 
@@ -42,9 +42,11 @@ export function renderDayWise(data){
     };
 }
 
+/* ---------- RENDER ---------- */
+
 function renderRows(data){
 
-    let rows = data.rows;
+    let rows = data.rows || [];
 
     if (currentBrand !== "ALL"){
         rows = rows.filter(r=>r.brand === currentBrand);
@@ -52,21 +54,29 @@ function renderRows(data){
 
     const html = rows.map(r=>`
         <tr>
-            <td>${r.style_id}</td>
+            <td>${safe(r.style_id)}</td>
             <td>${fmt(r.total)}</td>
-            ${r.days.map(v=>`<td>${v||0}</td>`).join("")}
+            ${(r.days || []).map(v=>`<td>${fmt(v)}</td>`).join("")}
         </tr>
     `).join("");
 
     document.getElementById("dwBody").innerHTML = html;
 }
 
+/* ---------- HELPERS ---------- */
+
 function buildDaysHeader(n){
-    let h="";
+    let h = "";
     for(let i=1;i<=n;i++){
-        h+=`<th>${i}</th>`;
+        h += `<th>${i}</th>`;
     }
     return h;
 }
 
-function fmt(n){ return Number(n||0).toLocaleString(); }
+function fmt(n){
+    return Number(n || 0).toLocaleString();
+}
+
+function safe(v){
+    return v || "-";
+}
