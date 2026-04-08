@@ -1,3 +1,5 @@
+import { openStyleIntelligence } from "../styleIntelligence/binder.js";
+
 let currentLimit = 10;
 let currentBrand = "ALL";
 let searchText = "";
@@ -55,17 +57,15 @@ export function renderTopStyles(data){
         </div>
     `;
 
-    // 🔥 EVENT DELEGATION (ONE TIME BIND)
+    // 🔥 CLICK HANDLER (STABLE)
     document.getElementById("topStylesBody").onclick = function(e){
 
         const cell = e.target.closest(".clickable-style");
-
         if (!cell) return;
 
         const styleId = cell.dataset.style;
 
-        import("../styleIntelligence/binder.js")
-            .then(m => m.openStyleIntelligence(styleId));
+        openStyleIntelligence(styleId);
     };
 
     renderRows(data);
