@@ -57,17 +57,6 @@ export function renderTopStyles(data){
         </div>
     `;
 
-    // 🔥 CLICK HANDLER (STABLE)
-    document.getElementById("topStylesBody").onclick = function(e){
-
-        const cell = e.target.closest(".clickable-style");
-        if (!cell) return;
-
-        const styleId = cell.dataset.style;
-
-        openStyleIntelligence(styleId);
-    };
-
     renderRows(data);
 
     document.getElementById("topNSelect").onchange = e=>{
@@ -115,11 +104,19 @@ function renderRows(data){
                 <td>${fmt(r.last_units)}</td>
                 <td>${fmt(r.last_revenue)}</td>
                 <td class="${growthClass(r.growth)}">${pct(r.growth)}</td>
-                <td class="${r.className}">${r.remark}</td>
+                <td>${r.remark}</td>
             </tr>
         `).join("");
 
     document.getElementById("topStylesBody").innerHTML = rows;
+
+    // 🔥 DIRECT CLICK BIND (NO FAILURE)
+    document.querySelectorAll(".clickable-style").forEach(el=>{
+        el.addEventListener("click", function(){
+            const styleId = this.dataset.style;
+            openStyleIntelligence(styleId);
+        });
+    });
 }
 
 /* ---------- HELPERS ---------- */
