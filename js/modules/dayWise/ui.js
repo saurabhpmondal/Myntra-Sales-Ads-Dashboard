@@ -59,8 +59,6 @@ export function renderDayWise(payload){
 
     renderTable(dataMap);
 
-    /* EVENTS */
-
     document.getElementById("dwMonth").onchange = e=>{
         currentMonth = e.target.value;
         visibleCount = 50;
@@ -85,8 +83,6 @@ export function renderDayWise(payload){
     };
 }
 
-/* ---------- TABLE ---------- */
-
 function renderTable(dataMap){
 
     let rows = dataMap[currentMonth] || [];
@@ -100,7 +96,6 @@ function renderTable(dataMap){
     }
 
     const visible = rows.slice(0, visibleCount);
-
     const days = visible[0]?.days?.length || 0;
 
     const html = `
@@ -110,6 +105,10 @@ function renderTable(dataMap){
                     <tr>
                         <th>Style</th>
                         <th>Total</th>
+                        <th>Trend</th>
+                        <th>Momentum %</th>
+                        <th>Consistency %</th>
+                        <th>Active Days</th>
                         ${buildDays(days)}
                     </tr>
                 </thead>
@@ -129,6 +128,10 @@ function row(r){
         <tr>
             <td>${r.style_id}</td>
             <td>${fmt(r.total)}</td>
+            <td>${r.trend}</td>
+            <td class="${momClass(r.momentum)}">${pct(r.momentum)}</td>
+            <td>${pct(r.consistency)}</td>
+            <td>${r.activeDays}</td>
     `;
 
     for(let i=0;i<r.days.length;i++){
@@ -150,6 +153,12 @@ function row(r){
     return html;
 }
 
+function momClass(n){
+    if (n > 20) return "dw-up";
+    if (n < -20) return "dw-down";
+    return "";
+}
+
 function buildDays(n){
     let h="";
     for(let i=1;i<=n;i++){
@@ -160,4 +169,8 @@ function buildDays(n){
 
 function fmt(n){
     return Number(n||0).toLocaleString();
+}
+
+function pct(n){
+    return (n||0).toFixed(1)+"%";
 }
