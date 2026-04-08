@@ -488,3 +488,28 @@
 .top-style-filters .filter-item button{
     white-space: nowrap;
 }
+
+.top-style-filters.compact{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+.compact-input{
+    width:180px;
+    padding:6px 8px;
+}
+
+.compact-select{
+    padding:6px;
+}
+
+.compact-select.small{
+    width:70px;
+}
+
+.compact-btn{
+    padding:6px 10px;
+    cursor:pointer;
+}
