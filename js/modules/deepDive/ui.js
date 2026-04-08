@@ -15,7 +15,9 @@ export function renderDeepDive(){
                 <button id="ddSearchBtn">Search</button>
             </div>
 
-            <div id="ddResult" style="margin-top:16px;"></div>
+            <div id="ddResult" style="margin-top:16px;">
+                <p style="color:#6b7280;">Search a style to view intelligence</p>
+            </div>
 
         </div>
     `;
@@ -26,11 +28,21 @@ export function renderDeepDive(){
 
         const styleId = document.getElementById("ddSearch").value.trim();
 
-        if (!styleId) return alert("Enter style ID");
+        if (!styleId){
+            alert("Enter style ID");
+            return;
+        }
 
-        const data = buildStyleIntelligence(styleId);
+        let data = null;
 
-        if (!data || (!data.kpi.units && !data.kpi.revenue)){
+        try {
+            data = buildStyleIntelligence(styleId);
+        } catch (e) {
+            console.error(e);
+        }
+
+        // 🔥 ONLY BLOCK IF COMPLETELY NULL
+        if (!data){
             document.getElementById("ddResult").innerHTML =
                 `<p style="color:red;">❌ Style not found</p>`;
             return;
@@ -40,7 +52,7 @@ export function renderDeepDive(){
     }
 }
 
-/* 🔥 FULL UI (MATCHING YOUR OLD ONE BUT CLEAN) */
+/* 🔥 FULL UI */
 
 function renderFull(d){
 
@@ -49,22 +61,22 @@ function renderFull(d){
     el.innerHTML = `
         <div class="card">
 
-            <h3>${d.style_id} • ${d.brand}</h3>
+            <h3>${safe(d.style_id)} • ${safe(d.brand)}</h3>
 
             <!-- KPI GRID -->
             <div class="si-kpi-grid clean">
 
-                ${kpi("Units", d.kpi.units)}
-                ${kpi("Revenue", d.kpi.revenue)}
-                ${kpi("ASP", d.kpi.asp)}
+                ${kpi("Units", d.kpi?.units)}
+                ${kpi("Revenue", d.kpi?.revenue)}
+                ${kpi("ASP", d.kpi?.asp)}
 
-                ${kpi("Ad Spend", d.kpi.ad_spend)}
-                ${kpi("Ad Revenue", d.kpi.ad_revenue)}
-                ${kpi("ROI", d.kpi.roi)}
+                ${kpi("Ad Spend", d.kpi?.ad_spend)}
+                ${kpi("Ad Revenue", d.kpi?.ad_revenue)}
+                ${kpi("ROI", d.kpi?.roi)}
 
-                ${kpi("Impressions", d.kpi.impressions)}
-                ${kpi("Clicks", d.kpi.clicks)}
-                ${kpi("CVR", d.kpi.cvr)}
+                ${kpi("Impressions", d.kpi?.impressions)}
+                ${kpi("Clicks", d.kpi?.clicks)}
+                ${kpi("CVR", d.kpi?.cvr)}
 
             </div>
 
@@ -78,13 +90,13 @@ function renderFull(d){
             <div class="card">
                 <h3>Traffic Funnel</h3>
                 <div class="si-funnel clean">
-                    ${box("Impressions", d.traffic.impressions)}
+                    ${box("Impressions", d.traffic?.impressions)}
                     ${arrow()}
-                    ${box("Clicks", d.traffic.clicks)}
+                    ${box("Clicks", d.traffic?.clicks)}
                     ${arrow()}
-                    ${box("ATC", d.traffic.atc)}
+                    ${box("ATC", d.traffic?.atc)}
                     ${arrow()}
-                    ${box("Orders", d.traffic.orders)}
+                    ${box("Orders", d.traffic?.orders)}
                 </div>
             </div>
 
@@ -94,16 +106,16 @@ function renderFull(d){
                 <div class="si-compare clean">
                     <div>
                         <span>Current</span>
-                        <strong>${fmt(d.comparison.units)}</strong>
+                        <strong>${fmt(d.comparison?.units)}</strong>
                     </div>
                     <div>
                         <span>Last</span>
-                        <strong>${fmt(d.comparison.last_units)}</strong>
+                        <strong>${fmt(d.comparison?.last_units)}</strong>
                     </div>
                     <div>
                         <span>Growth</span>
-                        <strong class="${growthClass(d.comparison.growth)}">
-                            ${pct(d.comparison.growth)}
+                        <strong class="${growthClass(d.comparison?.growth)}">
+                            ${pct(d.comparison?.growth)}
                         </strong>
                     </div>
                 </div>
@@ -117,14 +129,17 @@ function renderFull(d){
         </div>
     `;
 
-    /* 🔥 CHART */
-    const labels = Object.keys(d.trend || {});
-    const revenue = labels.map(k => d.trend[k]?.revenue || 0);
+    /* 🔥 SAFE CHART */
+    const trend = d.trend || {};
+    const labels = Object.keys(trend);
 
-    renderLineChart("ddChart", labels, revenue, [], "Revenue", "");
+    if (labels.length){
+        const revenue = labels.map(k => trend[k]?.revenue || 0);
+        renderLineChart("ddChart", labels, revenue, [], "Revenue", "");
+    }
 }
 
-/* ---------- UI BLOCKS ---------- */
+/* ---------- HELPERS ---------- */
 
 function kpi(t,v){
     return `
@@ -143,7 +158,9 @@ function arrow(){
     return `<div class="si-arrow">→</div>`;
 }
 
-/* ---------- HELPERS ---------- */
+function safe(v){
+    return v || "-";
+}
 
 function fmt(n){ return Number(n||0).toLocaleString(); }
 function pct(n){ return (n||0).toFixed(1)+"%"; }
