@@ -48,6 +48,7 @@ export function renderTopStyles(data){
                             <th>Last Revenue</th>
                             <th>% Growth</th>
                             <th>Remark</th>
+                            <th>🔍</th>
                         </tr>
                     </thead>
                     <tbody id="topStylesBody"></tbody>
@@ -95,27 +96,26 @@ function renderRows(data){
         .slice(0, currentLimit)
         .map(r => `
             <tr>
-                <td class="clickable-style" data-style="${r.style_id}">
-                    ${r.style_id}
-                </td>
+                <td>${r.style_id}</td>
                 <td>${r.brand}</td>
                 <td>${fmt(r.units)}</td>
                 <td>${fmt(r.revenue)}</td>
                 <td>${fmt(r.last_units)}</td>
                 <td>${fmt(r.last_revenue)}</td>
                 <td class="${growthClass(r.growth)}">${pct(r.growth)}</td>
-                <td>${r.remark}</td>
+                <td class="${r.className}">${r.remark}</td>
+                <td class="deep-dive-btn" data-style="${r.style_id}">🔍</td>
             </tr>
         `).join("");
 
     document.getElementById("topStylesBody").innerHTML = rows;
 
-    // 🔥 DIRECT CLICK BIND (NO FAILURE)
-    document.querySelectorAll(".clickable-style").forEach(el=>{
-        el.addEventListener("click", function(){
+    // 🔥 CLEAN CLICK HANDLER (ONLY ICON)
+    document.querySelectorAll(".deep-dive-btn").forEach(el=>{
+        el.onclick = function(){
             const styleId = this.dataset.style;
             openStyleIntelligence(styleId);
-        });
+        };
     });
 }
 
