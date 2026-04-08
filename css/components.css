@@ -471,3 +471,9 @@
 .deep-dive-btn:hover{
     transform: scale(1.2);
 }
+
+.deep-dive-btn{
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+}
