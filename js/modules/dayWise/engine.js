@@ -30,7 +30,6 @@ export function buildDayWiseData(){
     months.forEach(mo=>{
 
         const daysInMonth = new Date(mo.y, mo.m, 0).getDate();
-
         const map = {};
 
         raw.forEach(r=>{
@@ -64,14 +63,51 @@ export function buildDayWiseData(){
             }
         });
 
-        dataMap[`${mo.y}-${mo.m}`] = Object.values(map)
-            .sort((a,b)=> b.total - a.total);
+        const rows = Object.values(map).map(r=>{
+
+            const activeDays = r.days.filter(d=>d>0).length;
+            const totalDays = r.days.length;
+
+            const consistency = totalDays ? (activeDays/totalDays)*100 : 0;
+
+            // 🔥 Momentum
+            let momentum = 0;
+
+            if (totalDays >= 6){
+                const last3 = avg(r.days.slice(-3));
+                const prev3 = avg(r.days.slice(-6,-3));
+                momentum = prev3 ? ((last3-prev3)/prev3)*100 : 0;
+            } else {
+                const half = Math.floor(totalDays/2);
+                const last = avg(r.days.slice(half));
+                const prev = avg(r.days.slice(0,half));
+                momentum = prev ? ((last-prev)/prev)*100 : 0;
+            }
+
+            // 🔥 Trend
+            let trend = "→";
+            if (momentum > 20) trend = "↑";
+            else if (momentum < -20) trend = "↓";
+
+            return {
+                ...r,
+                activeDays,
+                consistency,
+                momentum,
+                trend
+            };
+        });
+
+        dataMap[`${mo.y}-${mo.m}`] =
+            rows.sort((a,b)=> b.total - a.total);
     });
 
-    return {
-        months,
-        dataMap
-    };
+    return { months, dataMap };
+}
+
+function avg(arr){
+    if (!arr.length) return 0;
+    return arr.reduce((a,b)=>a+b,0)/arr.length;
 }
 
 function monthName(m){
