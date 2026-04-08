@@ -3,74 +3,84 @@ import { getData } from "../../core/dataRegistry.js";
 export function buildDayWiseData(){
 
     const raw = getData("SALES") || [];
-    if (!raw.length) return { days: 0, rows: [], monthLabel: "" };
+    if (!raw.length) return [];
 
-    // 🔥 month map
-    const mMap = {JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
+    const mMap = {
+        JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,
+        JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12
+    };
 
-    // 🔥 collect month-year combos
-    const set = new Set();
+    const monthSet = new Set();
 
     raw.forEach(r=>{
         const m = mMap[(r.month||"").trim().toUpperCase()];
         const y = Number(r.year);
-        if (m && y) set.add(`${y}-${m}`);
+        if (m && y) monthSet.add(`${y}-${m}`);
     });
 
-    if (!set.size) return { days: 0, rows: [], monthLabel: "" };
-
-    // latest month
-    const sorted = Array.from(set)
+    const sorted = Array.from(monthSet)
         .map(v=>{
             const [y,m]=v.split("-").map(Number);
             return {y,m};
         })
-        .sort((a,b)=> a.y===b.y ? a.m-b.m : a.y-b.y);
+        .sort((a,b)=> a.y===b.y ? b.m-a.m : b.y-a.y); // latest first
 
-    const cur = sorted[sorted.length-1];
+    const today = new Date().getDate();
 
-    // days in month
-    const daysInMonth = new Date(cur.y, cur.m, 0).getDate();
+    return sorted.map((cur, index)=>{
 
-    // 🔥 map
-    const map = {};
+        const daysInMonth = new Date(cur.y, cur.m, 0).getDate();
 
-    raw.forEach(r=>{
-        const m = mMap[(r.month||"").trim().toUpperCase()];
-        const y = Number(r.year);
-        if (m !== cur.m || y !== cur.y) return;
+        const map = {};
 
-        const style = r.style_id;
-        if (!style) return;
+        raw.forEach(r=>{
 
-        if (!map[style]){
-            map[style] = {
-                style_id: style,
-                brand: r.brand || "",
-                total: 0,
-                days: Array(daysInMonth).fill(0)
-            };
+            const m = mMap[(r.month||"").trim().toUpperCase()];
+            const y = Number(r.year);
+
+            if (m !== cur.m || y !== cur.y) return;
+
+            const style = r.style_id;
+            if (!style) return;
+
+            if (!map[style]){
+                map[style] = {
+                    style_id: style,
+                    brand: r.brand || "",
+                    total: 0,
+                    days: Array(daysInMonth).fill(0)
+                };
+            }
+
+            // ✅ DD-MM-YYYY parsing
+            const parts = (r.date || "").split("-");
+            const day = Number(parts[0]); // <-- FIXED
+
+            const qty = Number(r.qty || 0);
+
+            if (day >=1 && day <= daysInMonth){
+                map[style].days[day-1] += qty;
+                map[style].total += qty;
+            }
+        });
+
+        let rows = Object.values(map)
+            .sort((a,b)=> b.total - a.total);
+
+        // ✅ CURRENT MONTH → CUT FUTURE DAYS
+        if (index === 0){
+            rows.forEach(r=>{
+                r.days = r.days.slice(0, today);
+            });
         }
 
-        const d = new Date(r.date);
-        const day = d.getDate(); // 1–31
-
-        const qty = Number(r.qty || 0);
-
-        map[style].days[day-1] += qty;
-        map[style].total += qty;
+        return {
+            label: `${monthName(cur.m)} ${cur.y}`,
+            isOpen: index === 0,
+            days: index === 0 ? today : daysInMonth,
+            rows
+        };
     });
-
-    const rows = Object.values(map)
-        .sort((a,b)=> b.total - a.total);
-
-    const monthLabel = `${monthName(cur.m)} ${cur.y}`;
-
-    return {
-        days: daysInMonth,
-        rows,
-        monthLabel
-    };
 }
 
 function monthName(m){
