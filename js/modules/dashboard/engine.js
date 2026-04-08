@@ -3,7 +3,7 @@ export function buildDashboard(data) {
     const state = window.APP_STATE || {};
 
     /* ---------------------------
-       🔥 MONTH DETECTION (SAFE)
+       🔥 SAFE MONTH DETECTION
     --------------------------- */
 
     const monthMapNum = {
@@ -11,10 +11,14 @@ export function buildDashboard(data) {
         JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12
     };
 
+    function normMonth(m){
+        return (m || "").toString().trim().toUpperCase();
+    }
+
     let latest = { y: 0, m: 0 };
 
     (data.SALES || []).forEach(r=>{
-        const m = monthMapNum[(r.month||"").toUpperCase()];
+        const m = monthMapNum[normMonth(r.month)];
         const y = Number(r.year);
 
         if (!m || !y) return;
@@ -25,22 +29,21 @@ export function buildDashboard(data) {
     });
 
     /* ---------------------------
-       🔥 SALES FILTER
+       🔥 SALES FILTER (FIXED)
     --------------------------- */
 
     const sales = (data.SALES || []).filter(r => {
 
         const d = buildDate(r);
 
-        // If user applied filter → use it
         if (state.from || state.to){
             if (state.from && d < state.from) return false;
             if (state.to && d > state.to) return false;
         } 
-        // Else → default latest month
         else {
-            const m = monthMapNum[(r.month||"").toUpperCase()];
+            const m = monthMapNum[normMonth(r.month)];
             const y = Number(r.year);
+
             if (m !== latest.m || y !== latest.y) return false;
         }
 
@@ -50,27 +53,30 @@ export function buildDashboard(data) {
     });
 
     /* ---------------------------
-       🔥 ADS FILTER
+       🔥 ADS FILTER (RESTORED + SAFE)
     --------------------------- */
 
     const ads = (data.CDR || []).filter(r => {
 
         const raw = (r.date || "").toString();
 
-        if (raw.length !== 8) return false;
+        // restore working behavior first
+        if (state.from || state.to){
+            const d = raw;
+            if (state.from && d < state.from) return false;
+            if (state.to && d > state.to) return false;
+            return true;
+        }
+
+        // apply month logic safely
+        if (raw.length !== 8) return true; // don't break data
 
         const y = Number(raw.slice(0,4));
         const m = Number(raw.slice(4,6));
 
-        if (state.from || state.to){
-            const d = `${y}-${raw.slice(4,6)}-${raw.slice(6,8)}`;
-            if (state.from && d < state.from) return false;
-            if (state.to && d > state.to) return false;
-        } else {
-            if (m !== latest.m || y !== latest.y) return false;
-        }
+        if (!y || !m) return true;
 
-        return true;
+        return (m === latest.m && y === latest.y);
     });
 
     let gmv = 0;
@@ -136,7 +142,9 @@ export function buildDashboard(data) {
 
         if (!raw || s <= 0) return;
 
-        const d = `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`;
+        const d = raw.length === 8
+            ? `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`
+            : raw;
 
         if (!adsTrend[d]) {
             adsTrend[d] = { spend: 0, revenue: 0 };
@@ -163,15 +171,12 @@ export function buildDashboard(data) {
 /* ---------- CLEAN TREND ---------- */
 
 function cleanTrend(trend){
-
     const sortedKeys = Object.keys(trend).sort();
     const cleaned = {};
-
     sortedKeys.forEach(k => {
         const v = trend[k];
         if (v > 0) cleaned[k] = v;
     });
-
     return cleaned;
 }
 
@@ -187,7 +192,7 @@ function buildDate(r) {
     };
 
     const day = String(r.date).padStart(2, "0");
-    const month = monthMap[(r.month || "").toUpperCase()] || "01";
+    const month = monthMap[(r.month || "").toUpperCase().trim()] || "01";
 
     return `${r.year}-${month}-${day}`;
 }
