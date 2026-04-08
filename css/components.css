@@ -558,3 +558,23 @@
     background:#fff;
     z-index:2;
 }
+
+.dw-header{
+    font-weight:600;
+    padding:10px;
+    cursor:pointer;
+    background:#f5f5f5;
+    margin-top:10px;
+}
+
+.dw-up{
+    background:#e6f4ea;
+    color:#1e7e34;
+    font-weight:600;
+}
+
+.dw-down{
+    background:#fdecea;
+    color:#c62828;
+    font-weight:600;
+}
