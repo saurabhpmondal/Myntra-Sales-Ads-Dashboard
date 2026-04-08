@@ -6,8 +6,11 @@ import { runListings } from "../listings/binder.js";
 import { runTraffic } from "../traffic/binder.js";
 import { runAlerts } from "../alerts/binder.js";
 
-// 🔥 NEW IMPORT
+// 🔥 EXISTING
 import { runTopStyles } from "../topStyles/binder.js";
+
+// 🔥 NEW (DEEP DIVE)
+import { runDeepDive } from "../deepDive/binder.js";
 
 export function renderDashboard(data) {
 
@@ -61,7 +64,8 @@ export function renderDashboard(data) {
                 ${tab("listings","Listings")}
                 ${tab("traffic","Traffic")}
                 ${tab("alerts","Alerts")}
-                ${tab("topstyles","Top Styles")} <!-- 🔥 NEW TAB -->
+                ${tab("topstyles","Top Styles")}
+                ${tab("deepdive","Deep Dive")} <!-- 🔥 NEW TAB -->
             </div>
 
             <div id="reportContainer" class="card"></div>
@@ -119,7 +123,10 @@ function renderReport(type){
     if (type === "listings") return runListings();
     if (type === "traffic") return runTraffic();
     if (type === "alerts") return runAlerts();
-    if (type === "topstyles") return runTopStyles(); // 🔥 NEW
+    if (type === "topstyles") return runTopStyles();
+
+    // 🔥 NEW
+    if (type === "deepdive") return runDeepDive();
 
     document.getElementById("reportContainer").innerHTML =
         `<div style="padding:20px">${type.toUpperCase()} coming next</div>`;
