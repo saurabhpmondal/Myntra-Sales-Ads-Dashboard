@@ -1,4 +1,5 @@
 import { buildStyleIntelligence } from "../styleIntelligence/engine.js";
+import { renderLineChart } from "../../ui/components/charts/lineChart.js";
 
 export function renderDeepDive(){
 
@@ -9,33 +10,17 @@ export function renderDeepDive(){
 
             <h3>Deep Dive</h3>
 
-            <div class="top-style-filters compact">
-
-                <input id="ddSearch" class="compact-input" placeholder="Enter Style ID..." />
-
-                <button id="ddSearchBtn" class="compact-btn">Search</button>
-                <button id="ddExportBtn" class="compact-btn">Export</button>
-
+            <div class="top-style-filters">
+                <input id="ddSearch" placeholder="Enter Style ID..." />
+                <button id="ddSearchBtn">Search</button>
             </div>
 
-            <div id="ddResult" style="margin-top:16px;">
-                <p style="color:#6b7280;">Search a style to view intelligence</p>
-            </div>
+            <div id="ddResult" style="margin-top:16px;"></div>
 
         </div>
     `;
 
-    let currentData = null;
-
     document.getElementById("ddSearchBtn").onclick = runSearch;
-    document.getElementById("ddSearch").onkeypress = e=>{
-        if (e.key === "Enter") runSearch();
-    };
-
-    document.getElementById("ddExportBtn").onclick = ()=>{
-        if (!currentData) return alert("Search first");
-        exportStyle(currentData);
-    };
 
     function runSearch(){
 
@@ -51,14 +36,13 @@ export function renderDeepDive(){
             return;
         }
 
-        currentData = data;
-        renderResult(data);
+        renderFull(data);
     }
 }
 
-/* ---------- RESULT UI ---------- */
+/* 🔥 FULL UI (MATCHING YOUR OLD ONE BUT CLEAN) */
 
-function renderResult(d){
+function renderFull(d){
 
     const el = document.getElementById("ddResult");
 
@@ -67,7 +51,8 @@ function renderResult(d){
 
             <h3>${d.style_id} • ${d.brand}</h3>
 
-            <div class="si-kpi-grid">
+            <!-- KPI GRID -->
+            <div class="si-kpi-grid clean">
 
                 ${kpi("Units", d.kpi.units)}
                 ${kpi("Revenue", d.kpi.revenue)}
@@ -83,79 +68,88 @@ function renderResult(d){
 
             </div>
 
+            <!-- SALES TREND -->
+            <div class="card">
+                <h3>Sales Trend</h3>
+                <canvas id="ddChart"></canvas>
+            </div>
+
+            <!-- TRAFFIC FUNNEL -->
             <div class="card">
                 <h3>Traffic Funnel</h3>
-                <div class="si-funnel">
-                    ${box("Impr", d.traffic.impressions)}
-                    → ${box("Clicks", d.traffic.clicks)}
-                    → ${box("ATC", d.traffic.atc)}
-                    → ${box("Orders", d.traffic.orders)}
+                <div class="si-funnel clean">
+                    ${box("Impressions", d.traffic.impressions)}
+                    ${arrow()}
+                    ${box("Clicks", d.traffic.clicks)}
+                    ${arrow()}
+                    ${box("ATC", d.traffic.atc)}
+                    ${arrow()}
+                    ${box("Orders", d.traffic.orders)}
                 </div>
             </div>
 
+            <!-- MONTH COMPARISON -->
             <div class="card">
                 <h3>Month Comparison</h3>
-                <div class="si-compare">
-                    <div>Current: ${fmt(d.comparison.units)}</div>
-                    <div>Last: ${fmt(d.comparison.last_units)}</div>
-                    <div class="${growthClass(d.comparison.growth)}">
-                        ${pct(d.comparison.growth)}
+                <div class="si-compare clean">
+                    <div>
+                        <span>Current</span>
+                        <strong>${fmt(d.comparison.units)}</strong>
+                    </div>
+                    <div>
+                        <span>Last</span>
+                        <strong>${fmt(d.comparison.last_units)}</strong>
+                    </div>
+                    <div>
+                        <span>Growth</span>
+                        <strong class="${growthClass(d.comparison.growth)}">
+                            ${pct(d.comparison.growth)}
+                        </strong>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <h3>Insights</h3>
-                ${(d.insights || []).map(i => `
-                    <div class="si-insight ${i.type}">
-                        ${i.icon} ${i.text}
-                    </div>
-                `).join("")}
-            </div>
+            <!-- FUTURE -->
+            <div class="card"><h3>Inventory (Coming Soon)</h3></div>
+            <div class="card"><h3>Profit (Coming Soon)</h3></div>
+            <div class="card"><h3>Returns (Coming Soon)</h3></div>
 
+        </div>
+    `;
+
+    /* 🔥 CHART */
+    const labels = Object.keys(d.trend || {});
+    const revenue = labels.map(k => d.trend[k]?.revenue || 0);
+
+    renderLineChart("ddChart", labels, revenue, [], "Revenue", "");
+}
+
+/* ---------- UI BLOCKS ---------- */
+
+function kpi(t,v){
+    return `
+        <div class="si-kpi clean-box">
+            <span>${t}</span>
+            <strong>${fmt(v)}</strong>
         </div>
     `;
 }
 
-/* ---------- EXPORT ---------- */
+function box(t,v){
+    return `<div class="si-funnel-box clean-box">${t}<br><strong>${fmt(v)}</strong></div>`;
+}
 
-function exportStyle(d){
-
-    const row = [
-        d.style_id,
-        d.brand,
-        d.kpi.units,
-        d.kpi.revenue,
-        d.kpi.roi,
-        d.kpi.cvr
-    ].join(",");
-
-    const csv = "style,brand,units,revenue,roi,cvr\n" + row;
-
-    const blob = new Blob([csv], { type:"text/csv" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `style-${d.style_id}.csv`;
-    a.click();
+function arrow(){
+    return `<div class="si-arrow">→</div>`;
 }
 
 /* ---------- HELPERS ---------- */
-
-function kpi(t,v){
-    return `<div class="si-kpi"><span>${t}</span><strong>${fmt(v)}</strong></div>`;
-}
-
-function box(t,v){
-    return `<span>${t}: ${fmt(v)}</span>`;
-}
 
 function fmt(n){ return Number(n||0).toLocaleString(); }
 function pct(n){ return (n||0).toFixed(1)+"%"; }
 
 function growthClass(n){
-    if (n > 0) return "kpi-good";
-    if (n < 0) return "kpi-bad";
+    if(n > 0) return "kpi-good";
+    if(n < 0) return "kpi-bad";
     return "";
 }
