@@ -462,3 +462,12 @@
 .clickable-style{
     pointer-events: auto;
 }
+
+.deep-dive-btn{
+    cursor:pointer;
+    font-size:16px;
+}
+
+.deep-dive-btn:hover{
+    transform: scale(1.2);
+}
