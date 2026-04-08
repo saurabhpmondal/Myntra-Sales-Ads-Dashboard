@@ -5,12 +5,10 @@ import { runPlacement } from "../placement/binder.js";
 import { runListings } from "../listings/binder.js";
 import { runTraffic } from "../traffic/binder.js";
 import { runAlerts } from "../alerts/binder.js";
-
-// 🔥 EXISTING
 import { runTopStyles } from "../topStyles/binder.js";
 
-// 🔥 NEW (DEEP DIVE)
-import { runDeepDive } from "../deepDive/binder.js";
+// 🔥 NEW
+import { runDayWise } from "../dayWise/binder.js";
 
 export function renderDashboard(data) {
 
@@ -65,7 +63,7 @@ export function renderDashboard(data) {
                 ${tab("traffic","Traffic")}
                 ${tab("alerts","Alerts")}
                 ${tab("topstyles","Top Styles")}
-                ${tab("deepdive","Deep Dive")} <!-- 🔥 NEW TAB -->
+                ${tab("daywise","Day Wise")} <!-- 🔥 NEW TAB -->
             </div>
 
             <div id="reportContainer" class="card"></div>
@@ -77,10 +75,6 @@ export function renderDashboard(data) {
     initTabs();
 }
 
-/* =========================
-   🔥 FIXED CHART ALIGNMENT
-========================= */
-
 function renderCharts(data) {
 
     const sales = data.charts?.sales || {};
@@ -91,14 +85,7 @@ function renderCharts(data) {
     const gmv = labels.map(d => sales[d] || 0);
     const units = labels.map(d => unitsMap[d] || 0);
 
-    renderLineChart(
-        "salesChart",
-        labels,
-        gmv,
-        units,
-        "GMV",
-        "Units"
-    );
+    renderLineChart("salesChart", labels, gmv, units, "GMV", "Units");
 }
 
 function initTabs(){
@@ -126,77 +113,12 @@ function renderReport(type){
     if (type === "topstyles") return runTopStyles();
 
     // 🔥 NEW
-    if (type === "deepdive") return runDeepDive();
+    if (type === "daywise") return runDayWise();
 
     document.getElementById("reportContainer").innerHTML =
         `<div style="padding:20px">${type.toUpperCase()} coming next</div>`;
 }
 
-/* KPI + rest unchanged */
-
+/* helpers unchanged */
 function kpi(title, value, type, k){
-
-    const signal = getSignal(type, k);
-
-    return `
-        <div class="kpi-card ${signal.class}">
-            <h3>${title}</h3>
-            <p>${value}</p>
-            <span class="kpi-signal">${signal.icon}</span>
-        </div>
-    `;
-}
-
-function getSignal(type, k){
-
-    switch(type){
-
-        case "roi":
-            if (k.roi >= 3) return good();
-            if (k.roi < 1) return bad();
-            return neutral();
-
-        case "spend":
-            if (k.spend > k.revenue) return bad();
-            return neutral();
-
-        case "revenue":
-            if (k.revenue > k.spend) return good();
-            return neutral();
-
-        default:
-            return neutral();
-    }
-}
-
-function good(){ return { class: "kpi-good", icon: "▲" }; }
-function bad(){ return { class: "kpi-bad", icon: "▼" }; }
-function neutral(){ return { class: "", icon: "" }; }
-
-function tab(id, name, active=false){
-    return `<div class="tab ${active?"active":""}" data-type="${id}">${name}</div>`;
-}
-
-/* =========================
-   🔥 SORT FIX ADDED HERE
-========================= */
-
-function brandRows(map={}){
-
-    return Object.entries(map)
-        .sort((a,b) => (b[1].gmv || 0) - (a[1].gmv || 0))
-        .map(([b,v])=>`
-            <tr>
-                <td>${b}</td>
-                <td>${fmt(v.gmv)}</td>
-                <td>${fmt(v.units)}</td>
-                <td>${fmt2(v.units ? v.gmv/v.units : 0)}</td>
-                <td>${fmt(v.PPMP)}</td>
-                <td>${fmt(v.SJIT)}</td>
-                <td>${fmt(v.SOR)}</td>
-            </tr>
-        `).join("");
-}
-
-function fmt(n){ return Number(n||0).toLocaleString(); }
-function fmt2(n){ return Number(n||0).toFixed(2); }
+    const signal = get
