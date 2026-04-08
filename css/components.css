@@ -538,3 +538,23 @@
     display:flex;
     justify-content:space-between;
 }
+
+.daywise-wrapper{
+    overflow:auto;
+}
+
+.daywise-wrapper table th:first-child,
+.daywise-wrapper table td:first-child{
+    position:sticky;
+    left:0;
+    background:#fff;
+    z-index:2;
+}
+
+.daywise-wrapper table th:nth-child(2),
+.daywise-wrapper table td:nth-child(2){
+    position:sticky;
+    left:80px;
+    background:#fff;
+    z-index:2;
+}
