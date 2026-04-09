@@ -1,14 +1,12 @@
-import { getData } from "../../core/dataRegistry.js";
-
 export function renderCampaign(data){
 
     const container = document.getElementById("reportContainer");
 
     /* ---------------------------
-       ✅ CAMPAIGN (EXACT SAME)
+       ✅ CAMPAIGN (UNCHANGED)
     --------------------------- */
 
-    const campaignRows = Object.entries(data).map(([name,r]) => `
+    const campaignRows = Object.entries(data.campaign || data).map(([name,r]) => `
         <tr>
             <td>${name}</td>
             <td>${fmt(r.impressions)}</td>
@@ -22,10 +20,10 @@ export function renderCampaign(data){
     `).join("");
 
     /* ---------------------------
-       🔥 AD GROUP (NO FILTER CHANGE)
+       🔥 AD GROUP (NOW FILTERED)
     --------------------------- */
 
-    const raw = getData("CDR") || [];
+    const raw = data.rows || []; // ✅ FIX
 
     const adMap = {};
 
