@@ -3,10 +3,15 @@ export function renderPlacement(data){
     const container = document.getElementById("reportContainer");
 
     /* =========================
-       ✅ EXISTING PLACEMENT TABLE
+       ✅ SAFE DATA HANDLING
     ========================= */
 
-    const placementData = data.placement || {};
+    const placementData = data.placement || data || {};
+    const cpData = data.campaignPlacement || [];
+
+    /* =========================
+       EXISTING PLACEMENT TABLE
+    ========================= */
 
     const rows = Object.entries(placementData).map(([name,r]) => `
         <tr>
@@ -22,10 +27,8 @@ export function renderPlacement(data){
     `).join("");
 
     /* =========================
-       🔥 CAMPAIGN × PLACEMENT TABLE
+       CAMPAIGN × PLACEMENT
     ========================= */
-
-    const cpData = data.campaignPlacement || [];
 
     let cpRows = "";
 
@@ -37,7 +40,6 @@ export function renderPlacement(data){
 
             const isBest = r.roi === bestROI;
 
-            // 🔥 SIMPLE SUGGESTION (SAFE)
             let suggestion = "⚖️ Stable";
             if (r.roi >= 3) suggestion = "🚀 Scale";
             else if (r.roi < 1 && r.spend > 1000) suggestion = "❌ Cut";
@@ -61,7 +63,7 @@ export function renderPlacement(data){
     });
 
     /* =========================
-       🎯 FINAL RENDER
+       FINAL RENDER
     ========================= */
 
     container.innerHTML = `
@@ -82,37 +84,41 @@ export function renderPlacement(data){
                             <th>ROI</th>
                         </tr>
                     </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="card table-card">
-            <h3>Campaign × Placement Performance</h3>
-
-            <div class="table-wrapper">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Campaign</th>
-                            <th>Placement</th>
-                            <th>Spend</th>
-                            <th>Impressions</th>
-                            <th>Clicks</th>
-                            <th>CTR</th>
-                            <th>CVR</th>
-                            <th>Units</th>
-                            <th>Revenue</th>
-                            <th>ROI</th>
-                            <th>Suggestion</th>
-                        </tr>
-                    </thead>
                     <tbody>
-                        ${cpRows || `<tr><td colspan="11">No data available</td></tr>`}
+                        ${rows || `<tr><td colspan="8">No data</td></tr>`}
                     </tbody>
                 </table>
             </div>
         </div>
+
+        ${
+            cpData.length ? `
+            <div class="card table-card">
+                <h3>Campaign × Placement Performance</h3>
+
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Campaign</th>
+                                <th>Placement</th>
+                                <th>Spend</th>
+                                <th>Impressions</th>
+                                <th>Clicks</th>
+                                <th>CTR</th>
+                                <th>CVR</th>
+                                <th>Units</th>
+                                <th>Revenue</th>
+                                <th>ROI</th>
+                                <th>Suggestion</th>
+                            </tr>
+                        </thead>
+                        <tbody>${cpRows}</tbody>
+                    </table>
+                </div>
+            </div>
+            ` : ""
+        }
     `;
 }
 
