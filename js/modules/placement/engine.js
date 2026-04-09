@@ -5,7 +5,7 @@ export function buildPlacementData() {
     const raw = getData("PPR") || [];
 
     const map = {};
-    const campaignPlacementMap = {};
+    const cpMap = {}; // 🔥 NEW
 
     const VALID = [
         "top of search",
@@ -18,29 +18,13 @@ export function buildPlacementData() {
 
     raw.forEach(r => {
 
-        // 🔥 SAFE FIELD ACCESS (NO HARD DEPENDENCY)
-        const campaign =
-            r.campaign_name ||
-            r.campaign ||
-            r["campaign_name"] ||
-            r["Campaign Name"];
-
-        const placementRaw =
-            r.placement ||
-            r.placement_type ||
-            r["placement"] ||
-            r["placement_type"];
-
-        if (!campaign || !placementRaw) return;
-
-        const pRaw = placementRaw.toString().trim().toLowerCase();
-
+        const pRaw = (r.placement || "").toString().trim().toLowerCase();
         if (!VALID.includes(pRaw)) return;
 
         const placement = pRaw.replace(/\b\w/g, c => c.toUpperCase());
 
         /* =========================
-           PLACEMENT LEVEL
+           EXISTING LOGIC (UNCHANGED)
         ========================= */
 
         if (!map[placement]) {
@@ -64,13 +48,16 @@ export function buildPlacementData() {
         map[placement].total_units += Number(r.units_sold_total || 0);
 
         /* =========================
-           CAMPAIGN × PLACEMENT
+           🔥 NEW: CAMPAIGN × PLACEMENT
         ========================= */
 
+        if (!r.campaign_name) return;
+
+        const campaign = r.campaign_name.trim();
         const key = `${campaign}||${placement}`;
 
-        if (!campaignPlacementMap[key]) {
-            campaignPlacementMap[key] = {
+        if (!cpMap[key]) {
+            cpMap[key] = {
                 campaign,
                 placement,
                 impressions: 0,
@@ -81,25 +68,33 @@ export function buildPlacementData() {
             };
         }
 
-        campaignPlacementMap[key].impressions += Number(r.impressions || 0);
-        campaignPlacementMap[key].clicks += Number(r.clicks || 0);
-        campaignPlacementMap[key].spend += Number(r.spend || 0);
-        campaignPlacementMap[key].revenue += Number(r.revenue || 0);
-        campaignPlacementMap[key].units += Number(r.units_sold_total || 0);
+        cpMap[key].impressions += Number(r.impressions || 0);
+        cpMap[key].clicks += Number(r.clicks || 0);
+        cpMap[key].spend += Number(r.spend || 0);
+        cpMap[key].revenue += Number(r.revenue || 0);
+        cpMap[key].units += Number(r.units_sold_total || 0);
     });
 
     /* =========================
-       METRICS
+       EXISTING METRICS
     ========================= */
 
     Object.values(map).forEach(r => {
         r.ctr = r.impressions ? r.clicks / r.impressions : 0;
+        r.cpc = r.clicks ? r.spend / r.clicks : 0;
         r.roi = r.spend ? r.revenue / r.spend : 0;
+
+        // 🔥 FIX (UI EXPECTS units)
+        r.units = r.total_units;
     });
+
+    /* =========================
+       NEW GROUPING
+    ========================= */
 
     const grouped = {};
 
-    Object.values(campaignPlacementMap).forEach(r => {
+    Object.values(cpMap).forEach(r => {
 
         r.ctr = r.impressions ? r.clicks / r.impressions : 0;
         r.cvr = r.clicks ? r.units / r.clicks : 0;
@@ -109,16 +104,16 @@ export function buildPlacementData() {
         grouped[r.campaign].push(r);
     });
 
-    const campaignPlacement = Object.entries(grouped)
-        .map(([c, arr]) => {
-            const totalSpend = arr.reduce((s,x)=>s + x.spend, 0);
-            arr.sort((a,b)=> b.spend - a.spend);
-            return [c, arr, totalSpend];
-        })
-        .sort((a,b)=> b[2] - a[2]);
+    // sort inside campaign
+    Object.values(grouped).forEach(arr => {
+        arr.sort((a,b)=> b.spend - a.spend);
+    });
 
-    return {
-        placement: map,
-        campaignPlacement
-    };
+    /* =========================
+       🔥 ATTACH WITHOUT BREAKING
+    ========================= */
+
+    map._campaignPlacement = grouped;
+
+    return map;
 }
