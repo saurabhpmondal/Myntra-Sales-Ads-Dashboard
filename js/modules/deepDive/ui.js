@@ -64,7 +64,15 @@ function renderFull(d){
 
             <h3>${safe(d.style_id)} • ${safe(d.brand)}</h3>
 
-            <!-- 🔥 INSIGHTS BLOCK -->
+            <!-- 🔥 STYLE SCORE -->
+            <div class="card">
+                <h3>Style Score</h3>
+                <div class="si-score ${scoreClass(d.score?.value)}">
+                    ${d.score?.value || 0}/100 • ${d.score?.label || "-"}
+                </div>
+            </div>
+
+            <!-- 🔥 INSIGHTS -->
             <div class="card">
                 <h3>Insights</h3>
                 <div class="si-insights">
@@ -147,7 +155,7 @@ function renderFull(d){
     `;
 
     /* =========================
-       SAFE CHART
+       CHART
     ========================= */
 
     const trend = d.trend || {};
@@ -190,5 +198,11 @@ function pct(n){ return (n||0).toFixed(1)+"%"; }
 function growthClass(n){
     if(n > 0) return "kpi-good";
     if(n < 0) return "kpi-bad";
+    return "";
+}
+
+function scoreClass(v){
+    if (v >= 80) return "kpi-good";
+    if (v < 40) return "kpi-bad";
     return "";
 }
