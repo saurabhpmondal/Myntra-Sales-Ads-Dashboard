@@ -41,6 +41,9 @@ export function normalizeData(dataset, rows) {
                 roi_total: Number(r.roi_total) || 0,
 
                 campaign_name: r.campaign_name,
+
+adgroup_name: r.adgroup_name,
+adgroup_id: r.adgroup_id,
                 date: formattedDate
             };
         });
