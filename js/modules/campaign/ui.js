@@ -20,10 +20,10 @@ export function renderCampaign(data){
     `).join("");
 
     /* ---------------------------
-       🔥 AD GROUP (NOW FILTERED)
+       🔥 AD GROUP (FILTERED VIEW)
     --------------------------- */
 
-    const raw = data.rows || []; // ✅ FIX
+    const raw = data.rows || [];
 
     const adMap = {};
 
@@ -56,7 +56,12 @@ export function renderCampaign(data){
         r.roi = r.spend ? r.revenue / r.spend : 0;
     });
 
-    const adRows = Object.entries(adMap).map(([name,r]) => `
+    /* 🔥 REMOVE ZERO ROWS */
+    const filteredAdEntries = Object.entries(adMap).filter(([_, r]) =>
+        r.impressions > 0 || r.clicks > 0 || r.spend > 0
+    );
+
+    const adRows = filteredAdEntries.map(([name,r]) => `
         <tr>
             <td>${name}</td>
             <td>${fmt(r.impressions)}</td>
@@ -113,7 +118,9 @@ export function renderCampaign(data){
                             <th>ROI</th>
                         </tr>
                     </thead>
-                    <tbody>${adRows}</tbody>
+                    <tbody>
+                        ${adRows || `<tr><td colspan="8">No active ad groups</td></tr>`}
+                    </tbody>
                 </table>
             </div>
         </div>
