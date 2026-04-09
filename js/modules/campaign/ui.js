@@ -1,6 +1,7 @@
 import { getData } from "../../core/dataRegistry.js";
 
-export function runCampaign(){
+/* 🔥 THIS NAME MUST MATCH binder.js */
+export function renderCampaign(){
 
     const container = document.getElementById("reportContainer");
 
@@ -67,7 +68,6 @@ function getCampaignData(){
 
     const raw = getData("CDR") || [];
 
-    // 🔥 MONTH DETECTION
     let latest = { y:0, m:0 };
 
     raw.forEach(r=>{
@@ -103,7 +103,7 @@ function getCampaignData(){
         const revenue = Number(r.total_revenue) || 0;
         const units = Number(r.units_sold_total) || 0;
 
-        /* -------- CAMPAIGN -------- */
+        /* CAMPAIGN */
 
         const cKey = r.campaign_name || "UNKNOWN";
 
@@ -113,7 +113,7 @@ function getCampaignData(){
 
         add(campaign[cKey], imp, clk, spend, revenue, units);
 
-        /* -------- AD GROUP -------- */
+        /* AD GROUP */
 
         const aKey = `${r.adgroup_name || "NA"} (${r.adgroup_id || ""})`;
 
@@ -166,7 +166,7 @@ function finalize(map){
         .sort((a,b)=> b.revenue - a.revenue);
 }
 
-/* ---------- UI ROWS ---------- */
+/* ---------- UI ---------- */
 
 function campaignRows(data){
     return data.map(r=>`
