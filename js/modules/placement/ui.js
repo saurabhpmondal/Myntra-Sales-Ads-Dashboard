@@ -5,7 +5,7 @@ export function renderPlacement(data){
     const container = document.getElementById("reportContainer");
 
     /* ---------------------------
-       ✅ EXISTING PLACEMENT (UNCHANGED)
+       ✅ EXISTING TABLE (UNCHANGED)
     --------------------------- */
 
     const rows = Object.entries(data).map(([name,r]) => `
@@ -22,7 +22,7 @@ export function renderPlacement(data){
     `).join("");
 
     /* ---------------------------
-       🔥 NEW: CAMPAIGN × PLACEMENT
+       🔥 CAMPAIGN × PLACEMENT + SUGGESTIONS
     --------------------------- */
 
     const raw = getData("PPR") || [];
@@ -76,11 +76,25 @@ export function renderPlacement(data){
         r.cvr = r.clicks ? r.units / r.clicks : 0;
         r.roi = r.spend ? r.revenue / r.spend : 0;
 
+        // 🔥 SUGGESTION LOGIC
+        if (r.roi >= 3 && r.cvr >= 0.03){
+            r.suggestion = "🚀 Scale";
+        } else if (r.roi < 1 && r.spend > 1000){
+            r.suggestion = "❌ Cut";
+        } else if (r.impressions > 5000 && r.ctr < 0.005){
+            r.suggestion = "⚠️ Fix CTR";
+        } else if (r.clicks > 200 && r.cvr < 0.01){
+            r.suggestion = "⚠️ Fix CVR";
+        } else if (r.spend < 500){
+            r.suggestion = "🧪 Test";
+        } else {
+            r.suggestion = "⚖️ Stable";
+        }
+
         if (!grouped[r.campaign]) grouped[r.campaign] = [];
         grouped[r.campaign].push(r);
     });
 
-    // 🔥 SORT CAMPAIGNS BY TOTAL SPEND
     const sortedCampaigns = Object.entries(grouped)
         .map(([c, arr]) => {
             const totalSpend = arr.reduce((s,x)=>s + x.spend, 0);
@@ -92,20 +106,13 @@ export function renderPlacement(data){
 
     sortedCampaigns.forEach(([campaign, placements]) => {
 
-        // sort placements by spend
         placements.sort((a,b)=> b.spend - a.spend);
 
-        // best ROI
         let bestROI = Math.max(...placements.map(p => p.roi));
 
         placements.forEach((r, idx) => {
 
             const isBest = r.roi === bestROI;
-
-            const tag =
-                r.roi >= 3 ? "🟢 Scale" :
-                r.roi >= 1 ? "🟡 Stable" :
-                "🔴 Cut";
 
             cpRows += `
                 <tr class="${isBest ? "kpi-good" : ""}">
@@ -119,7 +126,7 @@ export function renderPlacement(data){
                     <td>${fmt(r.units)}</td>
                     <td>${fmt(r.revenue)}</td>
                     <td>${fmt2(r.roi)}</td>
-                    <td>${tag}</td>
+                    <td>${r.suggestion}</td>
                 </tr>
             `;
         });
@@ -169,7 +176,7 @@ export function renderPlacement(data){
                             <th>Units</th>
                             <th>Revenue</th>
                             <th>ROI</th>
-                            <th>Tag</th>
+                            <th>Suggestion</th>
                         </tr>
                     </thead>
                     <tbody>${cpRows}</tbody>
