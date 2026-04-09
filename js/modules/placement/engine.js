@@ -7,33 +7,59 @@ export function buildPlacementData() {
     const state = window.APP_STATE || {};
 
     /* =========================
-       🔥 MONTH SELECTION LOGIC
+       🔥 GET LATEST MONTH (CORRECT WAY)
     ========================= */
+
+    function parseMonth(m){
+        if (!m) return null;
+
+        const map = {
+            JAN: "01", FEB: "02", MAR: "03", APR: "04",
+            MAY: "05", JUN: "06", JUL: "07", AUG: "08",
+            SEP: "09", OCT: "10", NOV: "11", DEC: "12"
+        };
+
+        const [mon, yr] = m.toUpperCase().split("-");
+        const mm = map[mon];
+        const yyyy = "20" + yr;
+
+        return mm && yyyy ? `${yyyy}-${mm}` : null;
+    }
 
     let selectedMonth = state.month;
 
-    // fallback → pick latest month from data
     if (!selectedMonth) {
 
-        const months = [...new Set(raw.map(r => (r.month || "").toUpperCase()))]
-            .filter(Boolean)
-            .sort();
+        let latest = null;
+        let latestValue = "";
 
-        selectedMonth = months[months.length - 1]; // latest
+        raw.forEach(r => {
+
+            const m = r.month;
+            const parsed = parseMonth(m);
+
+            if (!parsed) return;
+
+            if (parsed > latestValue) {
+                latestValue = parsed;
+                latest = m;
+            }
+        });
+
+        selectedMonth = latest;
     }
 
     /* =========================
-       FILTER BY MONTH ONLY
+       FILTER BY MONTH
     ========================= */
 
     const filtered = raw.filter(r =>
-        (r.month || "").toUpperCase() === selectedMonth
+        (r.month || "").toUpperCase() === (selectedMonth || "").toUpperCase()
     );
 
     const map = {};
     const cpMap = {};
 
-    // 🔥 VALID PLACEMENTS
     const VALID = [
         "top of search",
         "rest of search",
@@ -111,7 +137,6 @@ export function buildPlacementData() {
         r.cpc = r.clicks ? r.spend / r.clicks : 0;
         r.roi = r.spend ? r.revenue / r.spend : 0;
 
-        // UI expects units
         r.units = r.total_units;
     });
 
@@ -131,14 +156,9 @@ export function buildPlacementData() {
         grouped[r.campaign].push(r);
     });
 
-    // sort inside campaign
     Object.values(grouped).forEach(arr => {
         arr.sort((a,b)=> b.spend - a.spend);
     });
-
-    /* =========================
-       ATTACH WITHOUT BREAKING
-    ========================= */
 
     map._campaignPlacement = grouped;
 
