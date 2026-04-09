@@ -6,9 +6,10 @@ import { runListings } from "../listings/binder.js";
 import { runTraffic } from "../traffic/binder.js";
 import { runAlerts } from "../alerts/binder.js";
 import { runTopStyles } from "../topStyles/binder.js";
-
-// 🔥 NEW
 import { runDayWise } from "../dayWise/binder.js";
+
+// 🔥 ADD THIS
+import { runDeepDive } from "../deepDive/binder.js";
 
 export function renderDashboard(data) {
 
@@ -63,7 +64,8 @@ export function renderDashboard(data) {
                 ${tab("traffic","Traffic")}
                 ${tab("alerts","Alerts")}
                 ${tab("topstyles","Top Styles")}
-                ${tab("daywise","Day Wise")} <!-- 🔥 NEW TAB -->
+                ${tab("daywise","Day Wise")}
+                ${tab("deepdive","Deep Dive")} <!-- 🔥 NEW -->
             </div>
 
             <div id="reportContainer" class="card"></div>
@@ -111,15 +113,17 @@ function renderReport(type){
     if (type === "traffic") return runTraffic();
     if (type === "alerts") return runAlerts();
     if (type === "topstyles") return runTopStyles();
-
-    // 🔥 NEW
     if (type === "daywise") return runDayWise();
+
+    // 🔥 ADD THIS
+    if (type === "deepdive") return runDeepDive();
 
     document.getElementById("reportContainer").innerHTML =
         `<div style="padding:20px">${type.toUpperCase()} coming next</div>`;
 }
 
 /* helpers unchanged */
+
 function kpi(title, value, type, k){
     const signal = getSignal(type, k);
     return `
@@ -130,6 +134,7 @@ function kpi(title, value, type, k){
         </div>
     `;
 }
+
 function getSignal(type, k){
     switch(type){
         case "roi":
@@ -146,6 +151,7 @@ function getSignal(type, k){
             return neutral();
     }
 }
+
 function good(){ return { class: "kpi-good", icon: "▲" }; }
 function bad(){ return { class: "kpi-bad", icon: "▼" }; }
 function neutral(){ return { class: "", icon: "" }; }
@@ -169,5 +175,6 @@ function brandRows(map={}){
             </tr>
         `).join("");
 }
+
 function fmt(n){ return Number(n||0).toLocaleString(); }
 function fmt2(n){ return Number(n||0).toFixed(2); }
