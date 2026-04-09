@@ -1,12 +1,14 @@
+import { getData } from "../../core/dataRegistry.js";
+
 export function renderCampaign(data){
 
     const container = document.getElementById("reportContainer");
 
     /* ---------------------------
-       ✅ EXISTING CAMPAIGN (UNCHANGED)
+       ✅ CAMPAIGN (EXACT SAME)
     --------------------------- */
 
-    const campaignRows = Object.entries(data.campaign || {}).map(([name,r]) => `
+    const campaignRows = Object.entries(data).map(([name,r]) => `
         <tr>
             <td>${name}</td>
             <td>${fmt(r.impressions)}</td>
@@ -20,10 +22,43 @@ export function renderCampaign(data){
     `).join("");
 
     /* ---------------------------
-       ✅ NEW AD GROUP (SAFE ADD)
+       🔥 AD GROUP (NO FILTER CHANGE)
     --------------------------- */
 
-    const adGroupRows = Object.entries(data.adgroup || {}).map(([name,r]) => `
+    const raw = getData("CDR") || [];
+
+    const adMap = {};
+
+    raw.forEach(r => {
+
+        const name = r.adgroup_name || "NA";
+        const id = r.adgroup_id || "";
+
+        const key = `${name} (${id})`;
+
+        if (!adMap[key]){
+            adMap[key] = {
+                impressions: 0,
+                clicks: 0,
+                spend: 0,
+                units: 0,
+                revenue: 0
+            };
+        }
+
+        adMap[key].impressions += Number(r.impressions || 0);
+        adMap[key].clicks += Number(r.clicks || 0);
+        adMap[key].spend += Number(r.ad_spend || 0);
+        adMap[key].units += Number(r.units_sold_total || 0);
+        adMap[key].revenue += Number(r.total_revenue || 0);
+    });
+
+    Object.values(adMap).forEach(r => {
+        r.ctr = r.impressions ? r.clicks / r.impressions : 0;
+        r.roi = r.spend ? r.revenue / r.spend : 0;
+    });
+
+    const adRows = Object.entries(adMap).map(([name,r]) => `
         <tr>
             <td>${name}</td>
             <td>${fmt(r.impressions)}</td>
@@ -35,6 +70,10 @@ export function renderCampaign(data){
             <td>${fmt2(r.roi)}</td>
         </tr>
     `).join("");
+
+    /* ---------------------------
+       🎯 FINAL RENDER
+    --------------------------- */
 
     container.innerHTML = `
         <div class="card table-card">
@@ -76,9 +115,7 @@ export function renderCampaign(data){
                             <th>ROI</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${adGroupRows || `<tr><td colspan="8">No data</td></tr>`}
-                    </tbody>
+                    <tbody>${adRows}</tbody>
                 </table>
             </div>
         </div>
