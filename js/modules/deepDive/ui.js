@@ -41,7 +41,6 @@ export function renderDeepDive(){
             console.error(e);
         }
 
-        // 🔥 ONLY BLOCK IF COMPLETELY NULL
         if (!data){
             document.getElementById("ddResult").innerHTML =
                 `<p style="color:red;">❌ Style not found</p>`;
@@ -52,7 +51,9 @@ export function renderDeepDive(){
     }
 }
 
-/* 🔥 FULL UI */
+/* =========================
+   FULL UI
+========================= */
 
 function renderFull(d){
 
@@ -62,6 +63,22 @@ function renderFull(d){
         <div class="card">
 
             <h3>${safe(d.style_id)} • ${safe(d.brand)}</h3>
+
+            <!-- 🔥 INSIGHTS BLOCK -->
+            <div class="card">
+                <h3>Insights</h3>
+                <div class="si-insights">
+                    ${
+                        (d.insights || []).length
+                        ? d.insights.map(i => `
+                            <div class="insight ${i.type}">
+                                ${i.text}
+                            </div>
+                        `).join("")
+                        : `<div class="insight">No major issues detected</div>`
+                    }
+                </div>
+            </div>
 
             <!-- KPI GRID -->
             <div class="si-kpi-grid clean">
@@ -129,7 +146,10 @@ function renderFull(d){
         </div>
     `;
 
-    /* 🔥 SAFE CHART */
+    /* =========================
+       SAFE CHART
+    ========================= */
+
     const trend = d.trend || {};
     const labels = Object.keys(trend);
 
@@ -139,7 +159,9 @@ function renderFull(d){
     }
 }
 
-/* ---------- HELPERS ---------- */
+/* =========================
+   HELPERS
+========================= */
 
 function kpi(t,v){
     return `
