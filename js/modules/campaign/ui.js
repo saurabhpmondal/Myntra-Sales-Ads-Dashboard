@@ -37,7 +37,7 @@ export function renderCampaign(data){
     `).join("");
 
     /* ---------------------------
-       🔥 AD GROUP (SORTED + CVR + CLEAN)
+       🔥 AD GROUP (FILTERED + SORTED)
     --------------------------- */
 
     const raw = data.rows || [];
@@ -84,4 +84,73 @@ export function renderCampaign(data){
         <tr>
             <td>${name}</td>
             <td>${fmt(r.spend)}</td>
-            <td
+            <td>${fmt(r.impressions)}</td>
+            <td>${fmt(r.clicks)}</td>
+            <td>${pct(r.ctr)}</td>
+            <td>${pct(r.cvr)}</td>
+            <td>${fmt(r.units)}</td>
+            <td>${fmt(r.revenue)}</td>
+            <td>${fmt2(r.roi)}</td>
+        </tr>
+    `).join("");
+
+    /* ---------------------------
+       🎯 FINAL RENDER
+    --------------------------- */
+
+    container.innerHTML = `
+        <div class="card table-card">
+            <h3>Campaign Performance</h3>
+
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Campaign</th>
+                            <th>Spend</th>
+                            <th>Impressions</th>
+                            <th>Clicks</th>
+                            <th>CTR</th>
+                            <th>CVR</th>
+                            <th>Units</th>
+                            <th>Revenue</th>
+                            <th>ROI</th>
+                        </tr>
+                    </thead>
+                    <tbody>${campaignRows}</tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card table-card">
+            <h3>Ad Group Performance</h3>
+
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Ad Group</th>
+                            <th>Spend</th>
+                            <th>Impressions</th>
+                            <th>Clicks</th>
+                            <th>CTR</th>
+                            <th>CVR</th>
+                            <th>Units</th>
+                            <th>Revenue</th>
+                            <th>ROI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${adRows || `<tr><td colspan="9">No active ad groups</td></tr>`}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+/* ---------- HELPERS ---------- */
+
+function fmt(n){ return Number(n||0).toLocaleString(); }
+function fmt2(n){ return Number(n||0).toFixed(2); }
+function pct(n){ return ((n||0)*100).toFixed(2)+"%"; }
