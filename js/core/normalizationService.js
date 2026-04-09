@@ -64,6 +64,12 @@ adgroup_id: r.adgroup_id,
         return rows.map(r => ({
             // 🔥 EXISTING (UNCHANGED)
             placement: r.placement,
+
+campaign_name: r.campaign_name,
+campaign_id: r.campaign_id,
+adgroup_name: r.adgroup_name,
+adgroup_id: r.adgroup_id,
+
             spend: Number(r.budget_spend) || 0,
             revenue: Number(r.total_revenue) || 0,
             clicks: Number(r.clicks) || 0,
