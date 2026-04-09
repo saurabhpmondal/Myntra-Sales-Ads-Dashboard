@@ -4,8 +4,8 @@ export function buildPlacementData() {
 
     const raw = getData("PPR") || [];
 
-    const map = {}; // existing placement table
-    const campaignPlacementMap = {}; // 🔥 NEW
+    const map = {};
+    const campaignPlacementMap = {};
 
     const VALID = [
         "top of search",
@@ -18,17 +18,29 @@ export function buildPlacementData() {
 
     raw.forEach(r => {
 
-        if (!r.campaign_name || !r.placement) return;
+        // 🔥 SAFE FIELD ACCESS (NO HARD DEPENDENCY)
+        const campaign =
+            r.campaign_name ||
+            r.campaign ||
+            r["campaign_name"] ||
+            r["Campaign Name"];
 
-        const campaign = r.campaign_name.trim();
+        const placementRaw =
+            r.placement ||
+            r.placement_type ||
+            r["placement"] ||
+            r["placement_type"];
 
-        const pRaw = r.placement.toString().trim().toLowerCase();
+        if (!campaign || !placementRaw) return;
+
+        const pRaw = placementRaw.toString().trim().toLowerCase();
+
         if (!VALID.includes(pRaw)) return;
 
         const placement = pRaw.replace(/\b\w/g, c => c.toUpperCase());
 
         /* =========================
-           ✅ EXISTING PLACEMENT MAP
+           PLACEMENT LEVEL
         ========================= */
 
         if (!map[placement]) {
@@ -52,7 +64,7 @@ export function buildPlacementData() {
         map[placement].total_units += Number(r.units_sold_total || 0);
 
         /* =========================
-           🔥 CAMPAIGN × PLACEMENT
+           CAMPAIGN × PLACEMENT
         ========================= */
 
         const key = `${campaign}||${placement}`;
@@ -77,12 +89,11 @@ export function buildPlacementData() {
     });
 
     /* =========================
-       METRICS CALCULATION
+       METRICS
     ========================= */
 
     Object.values(map).forEach(r => {
         r.ctr = r.impressions ? r.clicks / r.impressions : 0;
-        r.cpc = r.clicks ? r.spend / r.clicks : 0;
         r.roi = r.spend ? r.revenue / r.spend : 0;
     });
 
@@ -98,10 +109,6 @@ export function buildPlacementData() {
         grouped[r.campaign].push(r);
     });
 
-    /* =========================
-       SORTING
-    ========================= */
-
     const campaignPlacement = Object.entries(grouped)
         .map(([c, arr]) => {
             const totalSpend = arr.reduce((s,x)=>s + x.spend, 0);
@@ -110,12 +117,8 @@ export function buildPlacementData() {
         })
         .sort((a,b)=> b[2] - a[2]);
 
-    /* =========================
-       FINAL RETURN (NO BREAK)
-    ========================= */
-
     return {
-        placement: map,                  // existing
-        campaignPlacement: campaignPlacement // 🔥 NEW
+        placement: map,
+        campaignPlacement
     };
 }
