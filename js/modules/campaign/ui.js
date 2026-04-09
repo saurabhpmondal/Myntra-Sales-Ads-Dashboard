@@ -3,24 +3,41 @@ export function renderCampaign(data){
     const container = document.getElementById("reportContainer");
 
     /* ---------------------------
-       ✅ CAMPAIGN (UNCHANGED)
+       ✅ CAMPAIGN (SORTED + CVR)
     --------------------------- */
 
-    const campaignRows = Object.entries(data.campaign || data).map(([name,r]) => `
+    const campaignEntries = Object.entries(data.campaign || data)
+        .map(([name, r]) => {
+
+            const clicks = r.clicks || 0;
+            const units = r.units || 0;
+
+            return [
+                name,
+                {
+                    ...r,
+                    cvr: clicks ? units / clicks : 0
+                }
+            ];
+        })
+        .sort((a,b) => (b[1].spend || 0) - (a[1].spend || 0));
+
+    const campaignRows = campaignEntries.map(([name,r]) => `
         <tr>
             <td>${name}</td>
+            <td>${fmt(r.spend)}</td>
             <td>${fmt(r.impressions)}</td>
             <td>${fmt(r.clicks)}</td>
             <td>${pct(r.ctr)}</td>
+            <td>${pct(r.cvr)}</td>
             <td>${fmt(r.units)}</td>
             <td>${fmt(r.revenue)}</td>
-            <td>${fmt(r.spend)}</td>
             <td>${fmt2(r.roi)}</td>
         </tr>
     `).join("");
 
     /* ---------------------------
-       🔥 AD GROUP (FILTERED VIEW)
+       🔥 AD GROUP (SORTED + CVR + CLEAN)
     --------------------------- */
 
     const raw = data.rows || [];
@@ -53,82 +70,18 @@ export function renderCampaign(data){
 
     Object.values(adMap).forEach(r => {
         r.ctr = r.impressions ? r.clicks / r.impressions : 0;
+        r.cvr = r.clicks ? r.units / r.clicks : 0;
         r.roi = r.spend ? r.revenue / r.spend : 0;
     });
 
-    /* 🔥 REMOVE ZERO ROWS */
-    const filteredAdEntries = Object.entries(adMap).filter(([_, r]) =>
-        r.impressions > 0 || r.clicks > 0 || r.spend > 0
-    );
+    const adEntries = Object.entries(adMap)
+        .filter(([_, r]) =>
+            r.impressions > 0 || r.clicks > 0 || r.spend > 0
+        )
+        .sort((a,b) => (b[1].spend || 0) - (a[1].spend || 0));
 
-    const adRows = filteredAdEntries.map(([name,r]) => `
+    const adRows = adEntries.map(([name,r]) => `
         <tr>
             <td>${name}</td>
-            <td>${fmt(r.impressions)}</td>
-            <td>${fmt(r.clicks)}</td>
-            <td>${pct(r.ctr)}</td>
-            <td>${fmt(r.units)}</td>
-            <td>${fmt(r.revenue)}</td>
             <td>${fmt(r.spend)}</td>
-            <td>${fmt2(r.roi)}</td>
-        </tr>
-    `).join("");
-
-    /* ---------------------------
-       🎯 FINAL RENDER
-    --------------------------- */
-
-    container.innerHTML = `
-        <div class="card table-card">
-            <h3>Campaign Performance</h3>
-
-            <div class="table-wrapper">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Campaign</th>
-                            <th>Impressions</th>
-                            <th>Clicks</th>
-                            <th>CTR</th>
-                            <th>Units</th>
-                            <th>Revenue</th>
-                            <th>Spend</th>
-                            <th>ROI</th>
-                        </tr>
-                    </thead>
-                    <tbody>${campaignRows}</tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="card table-card">
-            <h3>Ad Group Performance</h3>
-
-            <div class="table-wrapper">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Ad Group</th>
-                            <th>Impressions</th>
-                            <th>Clicks</th>
-                            <th>CTR</th>
-                            <th>Units</th>
-                            <th>Revenue</th>
-                            <th>Spend</th>
-                            <th>ROI</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${adRows || `<tr><td colspan="8">No active ad groups</td></tr>`}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
-}
-
-/* ---------- HELPERS ---------- */
-
-function fmt(n){ return Number(n||0).toLocaleString(); }
-function fmt2(n){ return Number(n||0).toFixed(2); }
-function pct(n){ return ((n||0)*100).toFixed(2)+"%"; }
+            <td
