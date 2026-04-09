@@ -4,70 +4,116 @@ export function buildCampaignData(){
 
     const raw = getData("CDR") || [];
 
-    const state = window.APP_STATE || {};
-    const from = state.from;
-    const to = state.to;
-    const brand = state.brand;
+    if (!raw.length) return { campaign:{}, adgroup:{} };
 
-    const data = raw.filter(r => {
+    /* ---------------------------
+       🔥 FIND LATEST MONTH
+    --------------------------- */
 
-        const d = r.date;
-        if (!d) return false;
+    let latest = { y:0, m:0 };
 
-        if (from && d < from) return false;
-        if (to && d > to) return false;
+    raw.forEach(r=>{
+        const d = String(r.date || "");
 
-        if (brand && r.brand && r.brand !== brand) return false;
+        if (d.length >= 6){
+            const y = Number(d.slice(0,4));
+            const m = Number(d.slice(4,6));
 
-        return true;
+            if (y && m){
+                if (y > latest.y || (y === latest.y && m > latest.m)){
+                    latest = { y, m };
+                }
+            }
+        }
     });
 
-    const map = {};
+    /* ---------------------------
+       🔥 FILTER CURRENT MONTH
+    --------------------------- */
 
-    data.forEach(r => {
+    const filtered = raw.filter(r=>{
+        const d = String(r.date || "");
 
-        const key = r.campaign_name || "Unknown";
-
-        if (!map[key]) {
-            map[key] = {
-                impressions: 0,
-                clicks: 0,
-                spend: 0,
-
-                direct_units: 0,
-                indirect_units: 0,
-
-                direct_rev: 0,
-                indirect_rev: 0
-            };
+        if (d.length >= 6){
+            const y = Number(d.slice(0,4));
+            const m = Number(d.slice(4,6));
+            return (y === latest.y && m === latest.m);
         }
 
-        map[key].impressions += Number(r.impressions || 0);
-        map[key].clicks += Number(r.clicks || 0);
-        map[key].spend += Number(r.ad_spend || 0);
-
-        // 🔥 FIX: USE NORMALIZED FIELDS
-        const totalUnits = Number(r.units_sold_total || 0);
-        const totalRevenue = Number(r.total_revenue || 0);
-
-        // 👉 distribute safely (keep structure intact)
-        map[key].direct_units += totalUnits;
-        map[key].indirect_units += 0;
-
-        map[key].direct_rev += totalRevenue;
-        map[key].indirect_rev += 0;
+        return false;
     });
 
-    Object.values(map).forEach(r => {
+    /* ---------------------------
+       🔥 GROUPING
+    --------------------------- */
 
-        r.units = r.direct_units + r.indirect_units;
-        r.revenue = r.direct_rev + r.indirect_rev;
+    const campaign = {};
+    const adgroup = {};
 
+    filtered.forEach(r=>{
+
+        const imp = Number(r.impressions) || 0;
+        const clk = Number(r.clicks) || 0;
+        const spend = Number(r.ad_spend) || 0;
+        const revenue = Number(r.total_revenue) || 0;
+        const units = Number(r.units_sold_total) || 0;
+
+        /* ---------- CAMPAIGN ---------- */
+
+        const cKey = r.campaign_name || "UNKNOWN";
+
+        if (!campaign[cKey]){
+            campaign[cKey] = init();
+        }
+
+        add(campaign[cKey], imp, clk, spend, revenue, units);
+
+        /* ---------- AD GROUP ---------- */
+
+        const aKey = `${r.adgroup_name || "NA"} (${r.adgroup_id || ""})`;
+
+        if (!adgroup[aKey]){
+            adgroup[aKey] = init();
+        }
+
+        add(adgroup[aKey], imp, clk, spend, revenue, units);
+    });
+
+    /* ---------------------------
+       🔥 FINAL METRICS
+    --------------------------- */
+
+    applyMetrics(campaign);
+    applyMetrics(adgroup);
+
+    return { campaign, adgroup };
+}
+
+/* ---------- HELPERS ---------- */
+
+function init(){
+    return {
+        impressions:0,
+        clicks:0,
+        spend:0,
+        revenue:0,
+        units:0,
+        ctr:0,
+        roi:0
+    };
+}
+
+function add(obj, imp, clk, spend, revenue, units){
+    obj.impressions += imp;
+    obj.clicks += clk;
+    obj.spend += spend;
+    obj.revenue += revenue;
+    obj.units += units;
+}
+
+function applyMetrics(map){
+    Object.values(map).forEach(r=>{
         r.ctr = r.impressions ? r.clicks / r.impressions : 0;
-        r.cvr = r.clicks ? r.units / r.clicks : 0;
-
         r.roi = r.spend ? r.revenue / r.spend : 0;
     });
-
-    return map;
 }
