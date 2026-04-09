@@ -9,6 +9,8 @@ export function buildCampaignData(){
     const to = state.to;
     const brand = state.brand;
 
+    const filteredRows = []; // ✅ NEW
+
     const data = raw.filter(r => {
 
         const d = r.date;
@@ -18,6 +20,8 @@ export function buildCampaignData(){
         if (to && d > to) return false;
 
         if (brand && r.brand && r.brand !== brand) return false;
+
+        filteredRows.push(r); // ✅ NEW
 
         return true;
     });
@@ -46,11 +50,9 @@ export function buildCampaignData(){
         map[key].clicks += Number(r.clicks || 0);
         map[key].spend += Number(r.ad_spend || 0);
 
-        // 🔥 FIX: USE NORMALIZED FIELDS
         const totalUnits = Number(r.units_sold_total || 0);
         const totalRevenue = Number(r.total_revenue || 0);
 
-        // 👉 distribute safely (keep structure intact)
         map[key].direct_units += totalUnits;
         map[key].indirect_units += 0;
 
@@ -69,5 +71,8 @@ export function buildCampaignData(){
         r.roi = r.spend ? r.revenue / r.spend : 0;
     });
 
-    return map;
+    return {
+        campaign: map,
+        rows: filteredRows // ✅ NEW
+    };
 }
