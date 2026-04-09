@@ -1,6 +1,5 @@
 import { getData } from "../../core/dataRegistry.js";
 
-/* 🔥 THIS NAME MUST MATCH binder.js */
 export function renderCampaign(){
 
     const container = document.getElementById("reportContainer");
@@ -68,29 +67,47 @@ function getCampaignData(){
 
     const raw = getData("CDR") || [];
 
+    if (!raw.length){
+        return { campaign: [], adgroup: [] };
+    }
+
+    /* 🔥 FIND LATEST MONTH SAFELY */
+
     let latest = { y:0, m:0 };
 
     raw.forEach(r=>{
-        const d = (r.date || "").toString();
-        if (d.length !== 8) return;
+        const d = String(r.date || "");
 
-        const y = Number(d.slice(0,4));
-        const m = Number(d.slice(4,6));
+        if (d.length >= 6){
+            const y = Number(d.slice(0,4));
+            const m = Number(d.slice(4,6));
 
-        if (y > latest.y || (y === latest.y && m > latest.m)){
-            latest = { y, m };
+            if (y && m){
+                if (y > latest.y || (y === latest.y && m > latest.m)){
+                    latest = { y, m };
+                }
+            }
         }
     });
 
-    const filtered = raw.filter(r=>{
-        const d = (r.date || "").toString();
-        if (d.length !== 8) return false;
+    /* 🔥 FILTER (SAFE FALLBACK) */
 
-        const y = Number(d.slice(0,4));
-        const m = Number(d.slice(4,6));
+    let filtered = raw.filter(r=>{
+        const d = String(r.date || "");
 
-        return (y === latest.y && m === latest.m);
+        if (d.length >= 6){
+            const y = Number(d.slice(0,4));
+            const m = Number(d.slice(4,6));
+            return (y === latest.y && m === latest.m);
+        }
+
+        return true; // fallback → don't drop data
     });
+
+    // 🔥 if filter removed everything → fallback to full data
+    if (!filtered.length){
+        filtered = raw;
+    }
 
     const campaign = {};
     const adgroup = {};
@@ -169,6 +186,10 @@ function finalize(map){
 /* ---------- UI ---------- */
 
 function campaignRows(data){
+    if (!data.length){
+        return `<tr><td colspan="8">No data available</td></tr>`;
+    }
+
     return data.map(r=>`
         <tr>
             <td>${r.name}</td>
@@ -184,6 +205,10 @@ function campaignRows(data){
 }
 
 function adGroupRows(data){
+    if (!data.length){
+        return `<tr><td colspan="8">No data available</td></tr>`;
+    }
+
     return data.map(r=>`
         <tr>
             <td>${r.name}</td>
