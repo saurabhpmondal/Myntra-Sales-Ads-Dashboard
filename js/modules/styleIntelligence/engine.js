@@ -6,19 +6,11 @@ export function buildStyleIntelligence(styleId){
     const ads = getData("CDR") || [];
     const traffic = getData("TRAFFIC") || [];
 
-    /* =========================
-       FILTER STYLE
-    ========================= */
-
     const s = sales.filter(r => r.style_id == styleId);
     if (!s.length) return null;
 
     const a = ads.filter(r => r.style_id == styleId);
     const t = traffic.filter(r => r.style_id == styleId);
-
-    /* =========================
-       KPI CALCULATION
-    ========================= */
 
     let units = 0;
     let revenue = 0;
@@ -54,62 +46,68 @@ export function buildStyleIntelligence(styleId){
     const ctr = impressions ? clicks / impressions : 0;
 
     /* =========================
-       🔥 INSIGHTS ENGINE (V1)
+       🔥 INSIGHTS
     ========================= */
 
     const insights = [];
 
-    // 🔴 Low CVR
     if (clicks > 100 && cvr < 0.01){
-        insights.push({
-            type: "bad",
-            text: "Low CVR → Improve PDP (images, pricing, reviews)"
-        });
+        insights.push({ type: "bad", text: "Low CVR → Improve PDP" });
     }
 
-    // 🔴 High spend, low ROI
     if (ad_spend > 5000 && roi < 1.5){
-        insights.push({
-            type: "bad",
-            text: "Inefficient spend → Reduce bids or pause keywords"
-        });
+        insights.push({ type: "bad", text: "Inefficient spend → Reduce ads" });
     }
 
-    // 🟡 High CTR, low CVR
     if (ctr > 0.03 && cvr < 0.01){
-        insights.push({
-            type: "warning",
-            text: "Traffic mismatch → Wrong audience or creatives"
-        });
+        insights.push({ type: "warning", text: "Traffic mismatch" });
     }
 
-    // 🟢 Strong performer
     if (roi > 3 && cvr > 0.02){
-        insights.push({
-            type: "good",
-            text: "Strong performer → Scale ads & visibility"
-        });
+        insights.push({ type: "good", text: "Strong performer → Scale" });
     }
 
-    // 🟡 Low traffic
     if (impressions < 1000){
-        insights.push({
-            type: "warning",
-            text: "Low visibility → Increase bids or improve discoverability"
-        });
+        insights.push({ type: "warning", text: "Low visibility" });
     }
 
-    // 💡 Organic opportunity
     if (ad_spend === 0 && units > 0){
-        insights.push({
-            type: "good",
-            text: "Organic traction → Start ads to scale"
-        });
+        insights.push({ type: "good", text: "Organic traction → Start ads" });
     }
 
     /* =========================
-       RETURN (NO BREAK)
+       🔥 SCORE SYSTEM
     ========================= */
+
+    let score = 0;
+
+    // ROI
+    if (roi >= 3) score += 30;
+    else if (roi >= 2) score += 22;
+    else if (roi >= 1) score += 15;
+    else score += 5;
+
+    // CVR
+    if (cvr >= 0.03) score += 25;
+    else if (cvr >= 0.02) score += 18;
+    else if (cvr >= 0.01) score += 10;
+    else score += 5;
+
+    // CTR
+    if (ctr >= 0.03) score += 20;
+    else if (ctr >= 0.02) score += 15;
+    else if (ctr >= 0.01) score += 10;
+    else score += 5;
+
+    // Momentum (units)
+    if (units > 50) score += 25;
+    else if (units > 20) score += 15;
+    else score += 5;
+
+    let label = "Poor";
+    if (score >= 80) label = "Excellent";
+    else if (score >= 60) label = "Good";
+    else if (score >= 40) label = "Average";
 
     return {
         style_id: styleId,
@@ -134,6 +132,11 @@ export function buildStyleIntelligence(styleId){
             orders: units
         },
 
-        insights // 🔥 NEW
+        insights,
+
+        score: {
+            value: score,
+            label
+        }
     };
 }
