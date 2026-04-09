@@ -1,14 +1,14 @@
-import { getData } from "../../core/dataRegistry.js";
-
 export function renderPlacement(data){
 
     const container = document.getElementById("reportContainer");
 
-    /* ---------------------------
-       ✅ EXISTING TABLE (UNCHANGED)
-    --------------------------- */
+    /* =========================
+       ✅ EXISTING PLACEMENT TABLE
+    ========================= */
 
-    const rows = Object.entries(data).map(([name,r]) => `
+    const placementData = data.placement || {};
+
+    const rows = Object.entries(placementData).map(([name,r]) => `
         <tr>
             <td>${name}</td>
             <td>${fmt(r.impressions)}</td>
@@ -21,101 +21,26 @@ export function renderPlacement(data){
         </tr>
     `).join("");
 
-    /* ---------------------------
-       🔥 CAMPAIGN × PLACEMENT (FIXED GROUPING)
-    --------------------------- */
+    /* =========================
+       🔥 CAMPAIGN × PLACEMENT TABLE
+    ========================= */
 
-    const raw = getData("PPR") || [];
-
-    const VALID = [
-        "top of search",
-        "rest of search",
-        "top of pdp",
-        "rest of pdp",
-        "top of home",
-        "rest of home"
-    ];
-
-    const map = {};
-
-    raw.forEach(r => {
-
-        // ✅ STRICT VALIDATION (NO UNKNOWN ALLOWED)
-        if (!r.campaign_name || !r.placement) return;
-
-        const campaign = r.campaign_name.trim();
-
-        const pRaw = r.placement.toString().trim().toLowerCase();
-        if (!VALID.includes(pRaw)) return;
-
-        const placement = pRaw.replace(/\b\w/g, c => c.toUpperCase());
-
-        const key = `${campaign}||${placement}`;
-
-        if (!map[key]){
-            map[key] = {
-                campaign,
-                placement,
-                impressions: 0,
-                clicks: 0,
-                spend: 0,
-                revenue: 0,
-                units: 0
-            };
-        }
-
-        map[key].impressions += Number(r.impressions || 0);
-        map[key].clicks += Number(r.clicks || 0);
-        map[key].spend += Number(r.spend || 0);
-        map[key].revenue += Number(r.revenue || 0);
-        map[key].units += Number(r.units_sold_total || 0);
-    });
-
-    const grouped = {};
-
-    Object.values(map).forEach(r => {
-
-        r.ctr = r.impressions ? r.clicks / r.impressions : 0;
-        r.cvr = r.clicks ? r.units / r.clicks : 0;
-        r.roi = r.spend ? r.revenue / r.spend : 0;
-
-        // suggestions (unchanged logic)
-        if (r.roi >= 3 && r.cvr >= 0.03){
-            r.suggestion = "🚀 Scale";
-        } else if (r.roi < 1 && r.spend > 1000){
-            r.suggestion = "❌ Cut";
-        } else if (r.impressions > 5000 && r.ctr < 0.005){
-            r.suggestion = "⚠️ Fix CTR";
-        } else if (r.clicks > 200 && r.cvr < 0.01){
-            r.suggestion = "⚠️ Fix CVR";
-        } else if (r.spend < 500){
-            r.suggestion = "🧪 Test";
-        } else {
-            r.suggestion = "⚖️ Stable";
-        }
-
-        if (!grouped[r.campaign]) grouped[r.campaign] = [];
-        grouped[r.campaign].push(r);
-    });
-
-    const sortedCampaigns = Object.entries(grouped)
-        .map(([c, arr]) => {
-            const totalSpend = arr.reduce((s,x)=>s + x.spend, 0);
-            return [c, arr, totalSpend];
-        })
-        .sort((a,b)=> b[2] - a[2]);
+    const cpData = data.campaignPlacement || [];
 
     let cpRows = "";
 
-    sortedCampaigns.forEach(([campaign, placements]) => {
+    cpData.forEach(([campaign, placements]) => {
 
-        placements.sort((a,b)=> b.spend - a.spend);
-
-        let bestROI = Math.max(...placements.map(p => p.roi));
+        const bestROI = Math.max(...placements.map(p => p.roi));
 
         placements.forEach((r, idx) => {
 
             const isBest = r.roi === bestROI;
+
+            // 🔥 SIMPLE SUGGESTION (SAFE)
+            let suggestion = "⚖️ Stable";
+            if (r.roi >= 3) suggestion = "🚀 Scale";
+            else if (r.roi < 1 && r.spend > 1000) suggestion = "❌ Cut";
 
             cpRows += `
                 <tr class="${isBest ? "kpi-good" : ""}">
@@ -129,15 +54,15 @@ export function renderPlacement(data){
                     <td>${fmt(r.units)}</td>
                     <td>${fmt(r.revenue)}</td>
                     <td>${fmt2(r.roi)}</td>
-                    <td>${r.suggestion}</td>
+                    <td>${suggestion}</td>
                 </tr>
             `;
         });
     });
 
-    /* ---------------------------
+    /* =========================
        🎯 FINAL RENDER
-    --------------------------- */
+    ========================= */
 
     container.innerHTML = `
         <div class="card table-card">
@@ -182,7 +107,9 @@ export function renderPlacement(data){
                             <th>Suggestion</th>
                         </tr>
                     </thead>
-                    <tbody>${cpRows}</tbody>
+                    <tbody>
+                        ${cpRows || `<tr><td colspan="11">No data available</td></tr>`}
+                    </tbody>
                 </table>
             </div>
         </div>
