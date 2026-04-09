@@ -22,7 +22,7 @@ export function renderPlacement(data){
     `).join("");
 
     /* ---------------------------
-       🔥 CAMPAIGN × PLACEMENT + SUGGESTIONS
+       🔥 CAMPAIGN × PLACEMENT (FIXED GROUPING)
     --------------------------- */
 
     const raw = getData("PPR") || [];
@@ -40,9 +40,12 @@ export function renderPlacement(data){
 
     raw.forEach(r => {
 
-        const campaign = r.campaign_name || "Unknown";
+        // ✅ STRICT VALIDATION (NO UNKNOWN ALLOWED)
+        if (!r.campaign_name || !r.placement) return;
 
-        const pRaw = (r.placement || "").toString().trim().toLowerCase();
+        const campaign = r.campaign_name.trim();
+
+        const pRaw = r.placement.toString().trim().toLowerCase();
         if (!VALID.includes(pRaw)) return;
 
         const placement = pRaw.replace(/\b\w/g, c => c.toUpperCase());
@@ -76,7 +79,7 @@ export function renderPlacement(data){
         r.cvr = r.clicks ? r.units / r.clicks : 0;
         r.roi = r.spend ? r.revenue / r.spend : 0;
 
-        // 🔥 SUGGESTION LOGIC
+        // suggestions (unchanged logic)
         if (r.roi >= 3 && r.cvr >= 0.03){
             r.suggestion = "🚀 Scale";
         } else if (r.roi < 1 && r.spend > 1000){
