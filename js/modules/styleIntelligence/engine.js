@@ -15,9 +15,21 @@ export function buildStyleIntelligence(styleId){
     let units = 0;
     let revenue = 0;
 
+    const trend = {}; // 🔥 ADDED
+
     s.forEach(r => {
-        units += Number(r.qty || 0);
-        revenue += Number(r.final_amount || 0);
+        const qty = Number(r.qty || 0);
+        const rev = Number(r.final_amount || 0);
+
+        units += qty;
+        revenue += rev;
+
+        // 🔥 BUILD TREND (date based)
+        const d = buildDate(r);
+        if (d){
+            if (!trend[d]) trend[d] = { revenue: 0 };
+            trend[d].revenue += rev;
+        }
     });
 
     const asp = units ? revenue / units : 0;
@@ -81,25 +93,21 @@ export function buildStyleIntelligence(styleId){
 
     let score = 0;
 
-    // ROI
     if (roi >= 3) score += 30;
     else if (roi >= 2) score += 22;
     else if (roi >= 1) score += 15;
     else score += 5;
 
-    // CVR
     if (cvr >= 0.03) score += 25;
     else if (cvr >= 0.02) score += 18;
     else if (cvr >= 0.01) score += 10;
     else score += 5;
 
-    // CTR
     if (ctr >= 0.03) score += 20;
     else if (ctr >= 0.02) score += 15;
     else if (ctr >= 0.01) score += 10;
     else score += 5;
 
-    // Momentum (units)
     if (units > 50) score += 25;
     else if (units > 20) score += 15;
     else score += 5;
@@ -108,6 +116,49 @@ export function buildStyleIntelligence(styleId){
     if (score >= 80) label = "Excellent";
     else if (score >= 60) label = "Good";
     else if (score >= 40) label = "Average";
+
+    /* =========================
+       🔥 MOMENTUM ENGINE
+    ========================= */
+
+    function calculateMomentum(trend){
+
+        const keys = Object.keys(trend).sort();
+
+        if (keys.length < 14){
+            return { value: 0, label: "Stable" };
+        }
+
+        const last7 = keys.slice(-7);
+        const prev7 = keys.slice(-14, -7);
+
+        const sum = (arr) =>
+            arr.reduce((s,k)=> s + (trend[k]?.revenue || 0), 0);
+
+        const recent = sum(last7);
+        const previous = sum(prev7);
+
+        if (!previous){
+            return { value: 0, label: "Stable" };
+        }
+
+        const growth = (recent - previous) / previous;
+
+        let mLabel = "Stable";
+        if (growth > 0.2) mLabel = "Rising";
+        else if (growth < -0.1) mLabel = "Declining";
+
+        return {
+            value: growth,
+            label: mLabel
+        };
+    }
+
+    const momentum = calculateMomentum(trend);
+
+    /* =========================
+       RETURN (SAFE)
+    ========================= */
 
     return {
         style_id: styleId,
@@ -132,11 +183,34 @@ export function buildStyleIntelligence(styleId){
             orders: units
         },
 
+        trend, // 🔥 already used in UI
+
         insights,
 
         score: {
             value: score,
             label
-        }
+        },
+
+        momentum // 🔥 NEW
     };
+}
+
+/* =========================
+   DATE BUILDER (SAFE)
+========================= */
+
+function buildDate(r) {
+
+    const monthMap = {
+        JAN: "01", FEB: "02", MAR: "03", APR: "04",
+        MAY: "05", JUN: "06", JUNE: "06",
+        JUL: "07", AUG: "08", SEP: "09",
+        OCT: "10", NOV: "11", DEC: "12"
+    };
+
+    const day = String(r.date).padStart(2, "0");
+    const month = monthMap[(r.month || "").toUpperCase()] || "01";
+
+    return `${r.year}-${month}-${day}`;
 }
