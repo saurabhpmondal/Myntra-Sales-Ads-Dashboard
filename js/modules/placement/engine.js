@@ -4,9 +4,36 @@ export function buildPlacementData() {
 
     const raw = getData("PPR") || [];
 
-    const map = {};
-    const cpMap = {}; // 🔥 NEW
+    const state = window.APP_STATE || {};
 
+    /* =========================
+       🔥 MONTH SELECTION LOGIC
+    ========================= */
+
+    let selectedMonth = state.month;
+
+    // fallback → pick latest month from data
+    if (!selectedMonth) {
+
+        const months = [...new Set(raw.map(r => (r.month || "").toUpperCase()))]
+            .filter(Boolean)
+            .sort();
+
+        selectedMonth = months[months.length - 1]; // latest
+    }
+
+    /* =========================
+       FILTER BY MONTH ONLY
+    ========================= */
+
+    const filtered = raw.filter(r =>
+        (r.month || "").toUpperCase() === selectedMonth
+    );
+
+    const map = {};
+    const cpMap = {};
+
+    // 🔥 VALID PLACEMENTS
     const VALID = [
         "top of search",
         "rest of search",
@@ -16,7 +43,7 @@ export function buildPlacementData() {
         "rest of home"
     ];
 
-    raw.forEach(r => {
+    filtered.forEach(r => {
 
         const pRaw = (r.placement || "").toString().trim().toLowerCase();
         if (!VALID.includes(pRaw)) return;
@@ -48,7 +75,7 @@ export function buildPlacementData() {
         map[placement].total_units += Number(r.units_sold_total || 0);
 
         /* =========================
-           🔥 NEW: CAMPAIGN × PLACEMENT
+           CAMPAIGN × PLACEMENT
         ========================= */
 
         if (!r.campaign_name) return;
@@ -84,12 +111,12 @@ export function buildPlacementData() {
         r.cpc = r.clicks ? r.spend / r.clicks : 0;
         r.roi = r.spend ? r.revenue / r.spend : 0;
 
-        // 🔥 FIX (UI EXPECTS units)
+        // UI expects units
         r.units = r.total_units;
     });
 
     /* =========================
-       NEW GROUPING
+       GROUP CAMPAIGN × PLACEMENT
     ========================= */
 
     const grouped = {};
@@ -110,7 +137,7 @@ export function buildPlacementData() {
     });
 
     /* =========================
-       🔥 ATTACH WITHOUT BREAKING
+       ATTACH WITHOUT BREAKING
     ========================= */
 
     map._campaignPlacement = grouped;
