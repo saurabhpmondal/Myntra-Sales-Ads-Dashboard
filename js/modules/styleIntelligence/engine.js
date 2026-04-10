@@ -6,16 +6,24 @@ export function buildStyleIntelligence(styleId){
     const ads = getData("CDR") || [];
     const traffic = getData("TRAFFIC") || [];
 
+    const sjitRaw = getData("sjit_stock") || [];
+    const sorRaw = getData("sor_stock") || [];
+    const sellerRaw = getData("seller_stock") || [];
+    const productRaw = getData("product_master") || [];
+
     const s = sales.filter(r => r.style_id == styleId);
     if (!s.length) return null;
 
     const a = ads.filter(r => r.style_id == styleId);
     const t = traffic.filter(r => r.style_id == styleId);
 
+    /* =========================
+       SALES + TREND
+    ========================= */
+
     let units = 0;
     let revenue = 0;
-
-    const trend = {}; // 🔥 ADDED
+    const trend = {};
 
     s.forEach(r => {
         const qty = Number(r.qty || 0);
@@ -24,7 +32,6 @@ export function buildStyleIntelligence(styleId){
         units += qty;
         revenue += rev;
 
-        // 🔥 BUILD TREND (date based)
         const d = buildDate(r);
         if (d){
             if (!trend[d]) trend[d] = { revenue: 0 };
@@ -33,6 +40,10 @@ export function buildStyleIntelligence(styleId){
     });
 
     const asp = units ? revenue / units : 0;
+
+    /* =========================
+       ADS
+    ========================= */
 
     let ad_spend = 0;
     let ad_revenue = 0;
@@ -43,6 +54,10 @@ export function buildStyleIntelligence(styleId){
     });
 
     const roi = ad_spend ? ad_revenue / ad_spend : 0;
+
+    /* =========================
+       TRAFFIC
+    ========================= */
 
     let impressions = 0;
     let clicks = 0;
@@ -58,7 +73,46 @@ export function buildStyleIntelligence(styleId){
     const ctr = impressions ? clicks / impressions : 0;
 
     /* =========================
-       🔥 INSIGHTS
+       INVENTORY
+    ========================= */
+
+    // 🔥 PRODUCT MASTER (style → erp_sku)
+    const pm = productRaw.filter(r => r.style_id == styleId);
+
+    const erpSet = new Set(pm.map(r => r.erp_sku));
+
+    let launch_date = pm[0]?.launch_date || "";
+    let live_date = pm[0]?.live_date || "";
+    let tp = Number(pm[0]?.tp || 0);
+
+    // 🔥 SELLER STOCK (via erp_sku)
+    let seller_stock = 0;
+    sellerRaw.forEach(r => {
+        if (erpSet.has(r.erp_sku)){
+            seller_stock += Number(r.units || 0);
+        }
+    });
+
+    // 🔥 SJIT
+    let sjit_stock = 0;
+    sjitRaw.forEach(r => {
+        if (r.style_id == styleId){
+            sjit_stock += Number(r.sellable_inventory_count || r.inventory_count || 0);
+        }
+    });
+
+    // 🔥 SOR
+    let sor_stock = 0;
+    sorRaw.forEach(r => {
+        if (r.style_id == styleId){
+            sor_stock += Number(r.units || 0);
+        }
+    });
+
+    const total_stock = sjit_stock + sor_stock + seller_stock;
+
+    /* =========================
+       INSIGHTS
     ========================= */
 
     const insights = [];
@@ -87,8 +141,18 @@ export function buildStyleIntelligence(styleId){
         insights.push({ type: "good", text: "Organic traction → Start ads" });
     }
 
+    // 🔥 STOCK INSIGHTS
+    const dailySales = units / 30;
+    const daysCover = dailySales ? total_stock / dailySales : 0;
+
+    if (daysCover < 7){
+        insights.push({ type: "bad", text: "Low stock → Replenish urgently" });
+    } else if (daysCover > 60){
+        insights.push({ type: "warning", text: "Overstock risk" });
+    }
+
     /* =========================
-       🔥 SCORE SYSTEM
+       SCORE
     ========================= */
 
     let score = 0;
@@ -118,46 +182,13 @@ export function buildStyleIntelligence(styleId){
     else if (score >= 40) label = "Average";
 
     /* =========================
-       🔥 MOMENTUM ENGINE
+       MOMENTUM
     ========================= */
-
-    function calculateMomentum(trend){
-
-        const keys = Object.keys(trend).sort();
-
-        if (keys.length < 14){
-            return { value: 0, label: "Stable" };
-        }
-
-        const last7 = keys.slice(-7);
-        const prev7 = keys.slice(-14, -7);
-
-        const sum = (arr) =>
-            arr.reduce((s,k)=> s + (trend[k]?.revenue || 0), 0);
-
-        const recent = sum(last7);
-        const previous = sum(prev7);
-
-        if (!previous){
-            return { value: 0, label: "Stable" };
-        }
-
-        const growth = (recent - previous) / previous;
-
-        let mLabel = "Stable";
-        if (growth > 0.2) mLabel = "Rising";
-        else if (growth < -0.1) mLabel = "Declining";
-
-        return {
-            value: growth,
-            label: mLabel
-        };
-    }
 
     const momentum = calculateMomentum(trend);
 
     /* =========================
-       RETURN (SAFE)
+       RETURN
     ========================= */
 
     return {
@@ -183,8 +214,21 @@ export function buildStyleIntelligence(styleId){
             orders: units
         },
 
-        trend, // 🔥 already used in UI
+        inventory: {
+            sjit: sjit_stock,
+            sor: sor_stock,
+            seller: seller_stock,
+            total: total_stock,
+            days_cover: daysCover
+        },
 
+        product: {
+            launch_date,
+            live_date,
+            tp
+        },
+
+        trend,
         insights,
 
         score: {
@@ -192,24 +236,53 @@ export function buildStyleIntelligence(styleId){
             label
         },
 
-        momentum // 🔥 NEW
+        momentum
     };
 }
 
-/* =========================
-   DATE BUILDER (SAFE)
-========================= */
+/* ========================= */
+
+function calculateMomentum(trend){
+
+    const keys = Object.keys(trend).sort();
+
+    if (keys.length < 14){
+        return { value: 0, label: "Stable" };
+    }
+
+    const last7 = keys.slice(-7);
+    const prev7 = keys.slice(-14, -7);
+
+    const sum = (arr) =>
+        arr.reduce((s,k)=> s + (trend[k]?.revenue || 0), 0);
+
+    const recent = sum(last7);
+    const previous = sum(prev7);
+
+    if (!previous){
+        return { value: 0, label: "Stable" };
+    }
+
+    const growth = (recent - previous) / previous;
+
+    let label = "Stable";
+    if (growth > 0.2) label = "Rising";
+    else if (growth < -0.1) label = "Declining";
+
+    return { value: growth, label };
+}
+
+/* ========================= */
 
 function buildDate(r) {
 
     const monthMap = {
         JAN: "01", FEB: "02", MAR: "03", APR: "04",
-        MAY: "05", JUN: "06", JUNE: "06",
-        JUL: "07", AUG: "08", SEP: "09",
-        OCT: "10", NOV: "11", DEC: "12"
+        MAY: "05", JUN: "06", JUL: "07", AUG: "08",
+        SEP: "09", OCT: "10", NOV: "11", DEC: "12"
     };
 
-    const day = String(r.date).padStart(2, "0");
+    const day = String(r.date || 1).padStart(2, "0");
     const month = monthMap[(r.month || "").toUpperCase()] || "01";
 
     return `${r.year}-${month}-${day}`;
