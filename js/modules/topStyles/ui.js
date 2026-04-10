@@ -90,7 +90,11 @@ function renderRows(data){
         .slice(0, currentLimit)
         .map(r => `
             <tr>
-                <td>${r.style_id}</td>
+                <td>
+                    ${r.style_id 
+                        ? `<a href="https://www.myntra.com/${r.style_id}" target="_blank" class="style-link">${r.style_id}</a>` 
+                        : "-"}
+                </td>
                 <td>${r.brand}</td>
                 <td>${fmt(r.units)}</td>
                 <td>${fmt(r.revenue)}</td>
