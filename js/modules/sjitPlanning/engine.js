@@ -62,6 +62,7 @@ export function buildSJITPlanning(){
 
         const drr = net ? net / totalDays : 0;
 
+        // 🔥 KEEP (NO DELETE)
         const adjDRR = drr * (1 - returnPct);
 
         /* =========================
@@ -75,18 +76,19 @@ export function buildSJITPlanning(){
             }
         });
 
-        const sc = adjDRR ? sjitStock / adjDRR : 0;
+        // 🔥 FIXED SC (CORRECT FORMULA)
+        const sc = drr ? sjitStock / drr : 0;
 
         /* =========================
-           SHIPMENT
+           SHIPMENT (FIXED)
         ========================= */
 
-        const target = adjDRR * 45;
+        const target = drr * 45; // 🔥 FIXED
         let shipment = target - sjitStock;
         if (shipment < 0) shipment = 0;
 
         /* =========================
-           RECALL
+           RECALL (FIXED)
         ========================= */
 
         let recall = 0;
@@ -146,7 +148,7 @@ export function buildSJITPlanning(){
             net,
 
             drr,
-            adj_drr: adjDRR,
+            adj_drr: adjDRR, // 🔥 still available
 
             sjit: sjitStock,
             sc,
