@@ -1,164 +1,195 @@
 import { getData } from "../../core/dataRegistry.js";
 
-export function buildSJITPlanning(){
+export function buildSJIOPlanning(){
 
     const orders = getData("PO_Seller_Orders_Report") || [];
     const returns = getData("PO_Seller_Returns_Report") || [];
-    const sjit = getData("sjit_stock") || [];
     const traffic = getData("TRAFFIC") || [];
-    const pm = getData("product_master") || [];
+    const sjit = getData("sjit_stock") || [];
+    const product = getData("product_master") || [];
 
     /* =========================
-       UNIQUE STYLE LIST
+       🔥 RETURN MAP
     ========================= */
 
-    const styleSet = new Set();
-
-    orders.forEach(r => styleSet.add(r.style_id));
-    sjit.forEach(r => styleSet.add(r.style_id));
-
-    const styles = Array.from(styleSet);
+    const returnMap = {};
+    returns.forEach(r=>{
+        if (!r.order_line_id) return;
+        returnMap[r.order_line_id] = true;
+    });
 
     /* =========================
-       RETURNS MAP
+       🔥 STYLE BASE MAP
     ========================= */
 
-    const returnSet = new Set(
-        returns.map(r => r.order_line_id)
-    );
+    const map = {};
+
+    orders.forEach(r => {
+
+        const style = (r.style_id || "").toString().trim();
+
+        // ❌ REMOVE INVALID STYLE
+        if (!style || isNaN(style)) return;
+
+        if (!map[style]){
+            map[style] = {
+                style_id: style,
+                brand: r.brand || "",
+                gross: 0,
+                returns: 0,
+                states: {}
+            };
+        }
+
+        map[style].gross += 1;
+
+        if (returnMap[r.order_line_id]){
+            map[style].returns += 1;
+        }
+
+        // zone tracking
+        if (r.state){
+            map[style].states[r.state] = true;
+        }
+    });
 
     /* =========================
-       DAYS CALCULATION
+       🔥 TRAFFIC MAP
     ========================= */
 
-    const today = new Date();
-    const currentMonthDays = today.getDate();
+    const trafficMap = {};
+    traffic.forEach(r=>{
+        if (!r.style_id) return;
 
-    const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-    const lastMonthDays = lastMonth.getDate();
+        if (!trafficMap[r.style_id]){
+            trafficMap[r.style_id] = {
+                rating: 0,
+                count: 0
+            };
+        }
 
-    const totalDays = currentMonthDays + lastMonthDays;
+        if (r.rating){
+            trafficMap[r.style_id].rating += Number(r.rating);
+            trafficMap[r.style_id].count += 1;
+        }
+    });
 
     /* =========================
-       BUILD DATA
+       🔥 SJIT MAP
     ========================= */
 
-    const result = [];
+    const sjitMap = {};
+    sjit.forEach(r=>{
+        if (!r.style_id) return;
 
-    styles.forEach(style_id => {
+        if (!sjitMap[r.style_id]){
+            sjitMap[r.style_id] = 0;
+        }
 
-        const o = orders.filter(r => r.style_id == style_id);
+        sjitMap[r.style_id] += Number(r.sellable_inventory_count || 0);
+    });
 
-        const gross = o.length;
+    /* =========================
+       🔥 PRODUCT MAP
+    ========================= */
 
-        let ret = 0;
-        o.forEach(r => {
-            if (returnSet.has(r.order_line_id)) ret++;
-        });
+    const productMap = {};
+    product.forEach(r=>{
+        if (!r.style_id) return;
 
-        const net = gross - ret;
+        productMap[r.style_id] = {
+            erp_sku: r.erp_sku,
+            brand: r.brand,
+            status: (r.status || "").toLowerCase(),
+            tp: r.tp
+        };
+    });
 
-        const returnPct = gross ? ret / gross : 0;
+    /* =========================
+       🔥 FINAL BUILD
+    ========================= */
 
-        const drr = net ? net / totalDays : 0;
+    const result = Object.values(map).map(r=>{
 
-        const adjDRR = drr * (1 - returnPct);
+        const net = r.gross - r.returns;
+        const returnPct = r.gross ? (r.returns / r.gross) * 100 : 0;
+
+        // DRR (calendar days)
+        const days = 30; // safe default
+        const drr = net / days;
+
+        const sjitStock = sjitMap[r.style_id] || 0;
+
+        const sc = drr ? (sjitStock / drr) : 0;
+
+        let shipment = Math.max(0, (45 * drr) - sjitStock);
+        let recall = sc >= 90 ? "YES" : "NO";
+
+        const prod = productMap[r.style_id] || {};
+        const ratingObj = trafficMap[r.style_id] || {};
+
+        const rating = ratingObj.count
+            ? (ratingObj.rating / ratingObj.count)
+            : 0;
+
+        let remarks = [];
 
         /* =========================
-           STOCK
+           🔥 BUSINESS RULES
         ========================= */
 
-        let sjitStock = 0;
-        sjit.forEach(r => {
-            if (r.style_id == style_id){
-                sjitStock += Number(r.sellable_inventory_count || 0);
-            }
-        });
+        if (returnPct > 45){
+            remarks.push("High Return");
+        }
 
-        const sc = adjDRR ? sjitStock / adjDRR : 0;
-
-        /* =========================
-           SHIPMENT
-        ========================= */
-
-        const target = adjDRR * 45;
-        let shipment = target - sjitStock;
-        if (shipment < 0) shipment = 0;
-
-        /* =========================
-           RECALL
-        ========================= */
-
-        let recall = 0;
         if (sc >= 90){
-            recall = sjitStock - target;
-            if (recall < 0) recall = 0;
+            shipment = 0;
+            remarks.push("Recall Required");
         }
 
-        /* =========================
-           META
-        ========================= */
-
-        const p = pm.find(x => x.style_id == style_id) || {};
-        const t = traffic.find(x => x.style_id == style_id) || {};
-
-        /* =========================
-           FLAGS
-        ========================= */
-
-        let remark = "";
-        if (net === 0 && sjitStock > 0){
-            remark = "HIGH RISK";
+        if (prod.status === "discontinued"){
+            shipment = 0;
+            remarks.push("Discontinued - Do Not Ship");
         }
 
-        /* =========================
-           PRIORITY
-        ========================= */
+        if (prod.status === "special"){
+            shipment = 0;
+            remarks.push("Special Category - Restricted");
+        }
 
-        let priority = "LOW";
+        if (r.gross === 0 && sjitStock > 0){
+            remarks.push("High Risk");
+        }
 
-        if (remark === "HIGH RISK") priority = "HIGH";
-        else if (shipment > 500) priority = "HIGH";
-        else if (shipment > 200) priority = "MEDIUM";
-        else if (recall > 200) priority = "MEDIUM";
+        return {
+            style_id: r.style_id,
+            brand: prod.brand || r.brand || "-",
+            erp_sku: prod.erp_sku || "-",
+            status: prod.status || "-",
+            rating: rating,
 
-        /* =========================
-           ACTION
-        ========================= */
+            gross: r.gross,
+            returns: r.returns,
+            returnPct: returnPct,
 
-        let action = "";
-
-        if (remark === "HIGH RISK") action = "STOP BUY";
-        else if (shipment > 0) action = "REPLENISH";
-        else if (recall > 0) action = "REDUCE STOCK";
-        else if (returnPct > 0.3) action = "FIX PRODUCT";
-
-        result.push({
-            style_id,
-            brand: p.brand,
-            erp_sku: p.erp_sku,
-            status: p.status,
-            rating: Number(t.rating || 0),
-
-            gross,
-            return: ret,
-            return_pct: returnPct,
             net,
-
             drr,
-            adj_drr: adjDRR,
 
             sjit: sjitStock,
             sc,
 
-            shipment: Math.round(shipment),
-            recall: Math.round(recall),
+            shipment,
+            recall,
 
-            priority,
-            action,
-            remark
-        });
+            remark: remarks.join(" | ")
+        };
     });
+
+    /* =========================
+       🔥 SORTING
+    ========================= */
+
+    result.sort((a,b)=> b.shipment - a.shipment);
 
     return result;
 }
