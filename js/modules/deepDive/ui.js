@@ -7,7 +7,6 @@ export function renderDeepDive(){
 
     container.innerHTML = `
         <div class="card">
-
             <h3>Deep Dive</h3>
 
             <div class="top-style-filters">
@@ -15,10 +14,7 @@ export function renderDeepDive(){
                 <button id="ddSearchBtn">Search</button>
             </div>
 
-            <div id="ddResult" style="margin-top:16px;">
-                <p style="color:#6b7280;">Search a style to view intelligence</p>
-            </div>
-
+            <div id="ddResult" style="margin-top:16px;"></div>
         </div>
     `;
 
@@ -33,13 +29,7 @@ export function renderDeepDive(){
             return;
         }
 
-        let data = null;
-
-        try {
-            data = buildStyleIntelligence(styleId);
-        } catch (e) {
-            console.error(e);
-        }
+        const data = buildStyleIntelligence(styleId);
 
         if (!data){
             document.getElementById("ddResult").innerHTML =
@@ -51,9 +41,7 @@ export function renderDeepDive(){
     }
 }
 
-/* =========================
-   FULL UI
-========================= */
+/* ========================= */
 
 function renderFull(d){
 
@@ -64,33 +52,35 @@ function renderFull(d){
 
             <h3>${safe(d.style_id)} • ${safe(d.brand)}</h3>
 
-            <!-- 🔥 STYLE SCORE -->
-            <div class="card">
-                <h3>Style Score</h3>
-                <div class="si-score ${scoreClass(d.score?.value)}">
-                    ${d.score?.value || 0}/100 • ${d.score?.label || "-"}
+            <!-- 🔥 HERO BLOCK -->
+            <div class="dd-hero">
+
+                <div class="dd-score">
+                    <div class="dd-big">${d.score?.value || 0}</div>
+                    <div class="dd-label">${d.score?.label}</div>
                 </div>
+
+                <div class="dd-momentum ${momentumClass(d.momentum?.value)}">
+                    ${pct(d.momentum?.value)} • ${d.momentum?.label}
+                </div>
+
             </div>
 
             <!-- 🔥 INSIGHTS -->
-            <div class="card">
-                <h3>Insights</h3>
-                <div class="si-insights">
-                    ${
-                        (d.insights || []).length
-                        ? d.insights.map(i => `
-                            <div class="insight ${i.type}">
-                                ${i.text}
-                            </div>
-                        `).join("")
-                        : `<div class="insight">No major issues detected</div>`
-                    }
-                </div>
+            <div class="dd-insights">
+                ${
+                    (d.insights || []).length
+                    ? d.insights.map(i => `
+                        <span class="badge ${i.type}">
+                            ${i.text}
+                        </span>
+                    `).join("")
+                    : `<span class="badge">No major issues</span>`
+                }
             </div>
 
             <!-- KPI GRID -->
             <div class="si-kpi-grid clean">
-
                 ${kpi("Units", d.kpi?.units)}
                 ${kpi("Revenue", d.kpi?.revenue)}
                 ${kpi("ASP", d.kpi?.asp)}
@@ -102,7 +92,20 @@ function renderFull(d){
                 ${kpi("Impressions", d.kpi?.impressions)}
                 ${kpi("Clicks", d.kpi?.clicks)}
                 ${kpi("CVR", d.kpi?.cvr)}
+            </div>
 
+            <!-- 🔥 INVENTORY -->
+            <div class="card">
+                <h3>Inventory Intelligence</h3>
+
+                <div class="si-kpi-grid clean">
+                    ${kpi("SJIT", d.inventory?.sjit)}
+                    ${kpi("SOR", d.inventory?.sor)}
+                    ${kpi("Seller", d.inventory?.seller)}
+                    ${kpi("Total Stock", d.inventory?.total)}
+                    ${kpi("Days Cover", fmt2(d.inventory?.days_cover))}
+                    ${kpi("TP", fmt2(d.product?.tp))}
+                </div>
             </div>
 
             <!-- SALES TREND -->
@@ -111,7 +114,7 @@ function renderFull(d){
                 <canvas id="ddChart"></canvas>
             </div>
 
-            <!-- TRAFFIC FUNNEL -->
+            <!-- FUNNEL -->
             <div class="card">
                 <h3>Traffic Funnel</h3>
                 <div class="si-funnel clean">
@@ -125,51 +128,32 @@ function renderFull(d){
                 </div>
             </div>
 
-            <!-- MONTH COMPARISON -->
-            <div class="card">
-                <h3>Month Comparison</h3>
-                <div class="si-compare clean">
-                    <div>
-                        <span>Current</span>
-                        <strong>${fmt(d.comparison?.units)}</strong>
-                    </div>
-                    <div>
-                        <span>Last</span>
-                        <strong>${fmt(d.comparison?.last_units)}</strong>
-                    </div>
-                    <div>
-                        <span>Growth</span>
-                        <strong class="${growthClass(d.comparison?.growth)}">
-                            ${pct(d.comparison?.growth)}
-                        </strong>
-                    </div>
-                </div>
-            </div>
-
-            <!-- FUTURE -->
-            <div class="card"><h3>Inventory (Coming Soon)</h3></div>
-            <div class="card"><h3>Profit (Coming Soon)</h3></div>
-            <div class="card"><h3>Returns (Coming Soon)</h3></div>
-
         </div>
     `;
 
-    /* =========================
-       CHART
-    ========================= */
+    /* 🔥 FIX: ONLY CURRENT MONTH TREND */
+
+    const state = window.APP_STATE || {};
+    const from = state.from;
+    const to = state.to;
 
     const trend = d.trend || {};
-    const labels = Object.keys(trend);
+
+    const filteredKeys = Object.keys(trend).filter(k => {
+        if (from && k < from) return false;
+        if (to && k > to) return false;
+        return true;
+    });
+
+    const labels = filteredKeys;
+    const revenue = labels.map(k => trend[k]?.revenue || 0);
 
     if (labels.length){
-        const revenue = labels.map(k => trend[k]?.revenue || 0);
         renderLineChart("ddChart", labels, revenue, [], "Revenue", "");
     }
 }
 
-/* =========================
-   HELPERS
-========================= */
+/* ========================= */
 
 function kpi(t,v){
     return `
@@ -193,16 +177,11 @@ function safe(v){
 }
 
 function fmt(n){ return Number(n||0).toLocaleString(); }
-function pct(n){ return (n||0).toFixed(1)+"%"; }
+function fmt2(n){ return Number(n||0).toFixed(2); }
+function pct(n){ return ((n||0)*100).toFixed(1)+"%"; }
 
-function growthClass(n){
-    if(n > 0) return "kpi-good";
-    if(n < 0) return "kpi-bad";
-    return "";
-}
-
-function scoreClass(v){
-    if (v >= 80) return "kpi-good";
-    if (v < 40) return "kpi-bad";
+function momentumClass(v){
+    if (v > 0.2) return "kpi-good";
+    if (v < -0.1) return "kpi-bad";
     return "";
 }
