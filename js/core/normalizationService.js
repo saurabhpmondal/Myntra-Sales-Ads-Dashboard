@@ -94,7 +94,6 @@ export function normalizeData(dataset, rows) {
             add_to_carts: Number(r.add_to_carts) || 0,
             purchases: Number(r.purchases) || 0,
 
-            // 🔥 FIX FOR ENGINE
             add_to_cart: Number(r.add_to_carts) || 0,
 
             atc: Number(r.add_to_carts) || 0,
@@ -115,28 +114,3 @@ export function normalizeData(dataset, rows) {
     }
 
     if (dataset === "sor_stock") {
-        return rows.map(r => ({
-            style_id: r.style_id,
-            units: Number(r.units) || 0
-        }));
-    }
-
-    if (dataset === "seller_stock") {
-        return rows.map(r => ({
-            erp_sku: r.erp_sku,
-            units: Number(r.units) || 0
-        }));
-    }
-
-    if (dataset === "product_master") {
-        return rows.map(r => ({
-            style_id: r.style_id,
-            erp_sku: r.erp_sku,
-            launch_date: r.launch_date,
-            live_date: r.live_date,
-            tp: Number(r.tp) || 0
-        }));
-    }
-
-    return rows;
-}
