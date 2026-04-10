@@ -1,164 +1,209 @@
-import { buildSJITPlanning } from "./engine.js";
+import { buildSJIOPlanning } from "./engine.js";
 
-let FULL_DATA = [];
-let visibleCount = 50;
-
-export function renderSJITPlanning(){
+export function renderSJIOPlanning(){
 
     const container = document.getElementById("reportContainer");
 
-    FULL_DATA = buildSJITPlanning()
-        .sort((a,b) => (b.shipment || 0) - (a.shipment || 0)); // 🔥 SORT
+    const data = buildSJIOPlanning() || [];
 
-    visibleCount = 50;
+    let visibleCount = 50;
 
-    renderTable();
-}
+    render();
 
-/* ========================= */
+    function render(){
 
-function renderTable(){
+        const rows = data.slice(0, visibleCount).map(r => {
 
-    const container = document.getElementById("reportContainer");
+            const recallClass = r.recall === "YES" ? "row-recall" : "";
 
-    const data = FULL_DATA.slice(0, visibleCount);
+            return `
+                <tr class="${recallClass}">
+                    <td>${r.style_id}</td>
+                    <td>${r.brand}</td>
+                    <td>${r.erp_sku}</td>
+                    <td>${r.status}</td>
+                    <td>${fmt2(r.rating)}</td>
 
-    const rows = data.map(r => {
+                    <td>${fmt(r.gross)}</td>
+                    <td>${fmt(r.returns)}</td>
+                    <td class="${r.returnPct > 45 ? "high-return" : ""}">
+                        ${pct(r.returnPct)}
+                    </td>
 
-        const returnFlag = r.return_pct > 0.4 ? "HIGH RETURN" : "";
+                    <td>${fmt(r.net)}</td>
+                    <td>${fmt2(r.drr)}</td>
 
-        return `
-        <tr>
-            <td>${r.style_id}</td>
-            <td>${r.brand || "-"}</td>
-            <td>${r.erp_sku || "-"}</td>
-            <td>${r.status || "-"}</td>
-            <td>${fmt2(r.rating)}</td>
+                    <td>${fmt(r.sjit)}</td>
+                    <td>${fmt2(r.sc)}</td>
 
-            <td>${r.gross}</td>
-            <td>${r.return}</td>
-            <td class="${r.return_pct > 0.4 ? "red" : ""}">
-                ${pct(r.return_pct)} ${returnFlag}
-            </td>
-            <td>${r.net}</td>
+                    <td>${fmt(r.shipment)}</td>
+                    <td>${r.recall}</td>
 
-            <td>${fmt2(r.drr)}</td>
-            <td>${r.sjit}</td>
-            <td>${fmt2(r.sc)}</td>
+                    <td>${r.remark || "-"}</td>
+                </tr>
+            `;
+        }).join("");
 
-            <td class="green">${r.shipment}</td>
-            <td class="red">${r.recall}</td>
+        container.innerHTML = `
+            <div class="card table-card">
 
-            <td>${r.priority}</td>
-            <td>${r.action}</td>
-            <td class="${r.remark === "HIGH RISK" ? "red" : ""}">
-                ${r.remark}
-            </td>
-        </tr>
-    `}).join("");
+                <h3>SJIO PO Planning</h3>
 
-    container.innerHTML = `
-        <div class="card table-card">
+                <!-- 🔥 ACTION BAR -->
+                <div class="table-actions">
+                    <button id="exportBtn">Export</button>
+                    <input id="searchBox" placeholder="Search Style ID..." />
+                </div>
 
-            <h3>SJIT PO Planning</h3>
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Style ID</th>
+                                <th>Brand</th>
+                                <th>ERP SKU</th>
+                                <th>ERP Status</th>
+                                <th>Ratings</th>
 
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                                <th>Gross</th>
+                                <th>Return</th>
+                                <th>Return %</th>
 
-                <button onclick="downloadSJIT()">Export</button>
+                                <th>Net</th>
+                                <th>DRR</th>
 
-                <input id="sjitSearch" placeholder="Search Style..." oninput="searchSJIT(this.value)" />
+                                <th>SJIT Stock</th>
+                                <th>SC</th>
+
+                                <th>Shipment</th>
+                                <th>Recall</th>
+
+                                <th>Remark</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows || `<tr><td colspan="15">No Data</td></tr>`}
+                        </tbody>
+                    </table>
+                </div>
+
+                ${
+                    visibleCount < data.length
+                    ? `<div style="text-align:center; padding:12px;">
+                        <button id="loadMore">Load More</button>
+                       </div>`
+                    : ""
+                }
 
             </div>
+        `;
 
-            <div class="table-wrapper">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Style</th>
-                            <th>Brand</th>
-                            <th>ERP</th>
-                            <th>Status</th>
-                            <th>Rating</th>
+        bindActions();
+    }
 
-                            <th>Gross</th>
-                            <th>Return</th>
-                            <th>Return%</th>
-                            <th>Net</th>
+    /* =========================
+       🔥 ACTIONS
+    ========================= */
 
-                            <th>DRR</th>
-                            <th>SJIT</th>
-                            <th>SC</th>
+    function bindActions(){
 
-                            <th>Shipment</th>
-                            <th>Recall</th>
+        const loadMoreBtn = document.getElementById("loadMore");
+        if (loadMoreBtn){
+            loadMoreBtn.onclick = ()=>{
+                visibleCount += 50;
+                render();
+            };
+        }
 
-                            <th>Priority</th>
-                            <th>Action</th>
-                            <th>Remark</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            </div>
+        const search = document.getElementById("searchBox");
+        if (search){
+            search.oninput = ()=>{
+                const val = search.value.trim();
 
-            ${
-                visibleCount < FULL_DATA.length
-                ? `<div style="text-align:center; margin-top:10px;">
-                        <button onclick="loadMoreSJIT()">Load More</button>
-                   </div>`
-                : ""
-            }
+                if (!val){
+                    visibleCount = 50;
+                    render();
+                    return;
+                }
 
-        </div>
-    `;
+                const filtered = data.filter(r =>
+                    r.style_id.includes(val)
+                );
+
+                renderFiltered(filtered);
+            };
+        }
+
+        const exportBtn = document.getElementById("exportBtn");
+        if (exportBtn){
+            exportBtn.onclick = exportCSV;
+        }
+    }
+
+    function renderFiltered(list){
+
+        const rows = list.map(r => {
+
+            const recallClass = r.recall === "YES" ? "row-recall" : "";
+
+            return `
+                <tr class="${recallClass}">
+                    <td>${r.style_id}</td>
+                    <td>${r.brand}</td>
+                    <td>${r.erp_sku}</td>
+                    <td>${r.status}</td>
+                    <td>${fmt2(r.rating)}</td>
+
+                    <td>${fmt(r.gross)}</td>
+                    <td>${fmt(r.returns)}</td>
+                    <td class="${r.returnPct > 45 ? "high-return" : ""}">
+                        ${pct(r.returnPct)}
+                    </td>
+
+                    <td>${fmt(r.net)}</td>
+                    <td>${fmt2(r.drr)}</td>
+
+                    <td>${fmt(r.sjit)}</td>
+                    <td>${fmt2(r.sc)}</td>
+
+                    <td>${fmt(r.shipment)}</td>
+                    <td>${r.recall}</td>
+
+                    <td>${r.remark || "-"}</td>
+                </tr>
+            `;
+        }).join("");
+
+        container.querySelector("tbody").innerHTML =
+            rows || `<tr><td colspan="15">No Data</td></tr>`;
+    }
+
+    /* =========================
+       🔥 EXPORT (FULL DATA)
+    ========================= */
+
+    function exportCSV(){
+
+        let csv = `Style ID,Brand,ERP SKU,ERP Status,Ratings,Gross,Return,Return %,Net,DRR,SJIT Stock,SC,Shipment,Recall,Remark\n`;
+
+        data.forEach(r=>{
+            csv += `${r.style_id},${r.brand},${r.erp_sku},${r.status},${fmt2(r.rating)},${r.gross},${r.returns},${pct(r.returnPct)},${r.net},${fmt2(r.drr)},${r.sjit},${fmt2(r.sc)},${r.shipment},${r.recall},"${r.remark}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "SJIO_PO_Planning.csv";
+        a.click();
+    }
 }
 
-/* ========================= */
-/* LOAD MORE */
+/* =========================
+   🔧 HELPERS
+========================= */
 
-window.loadMoreSJIT = function(){
-    visibleCount += 50;
-    renderTable();
-};
-
-/* ========================= */
-/* SEARCH */
-
-window.searchSJIT = function(val){
-
-    val = val.toLowerCase();
-
-    const filtered = FULL_DATA.filter(r =>
-        (r.style_id || "").toLowerCase().includes(val)
-    );
-
-    visibleCount = 50;
-
-    FULL_DATA = filtered;
-    renderTable();
-};
-
-/* ========================= */
-/* EXPORT (FULL DATA SAFE) */
-
-window.downloadSJIT = function(){
-
-    let csv = Object.keys(FULL_DATA[0]).join(",") + "\n";
-
-    FULL_DATA.forEach(r => {
-        csv += Object.values(r).join(",") + "\n";
-    });
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "sjit_planning.csv";
-    a.click();
-};
-
-/* ========================= */
-
+function fmt(n){ return Number(n||0).toLocaleString(); }
 function fmt2(n){ return Number(n||0).toFixed(2); }
-function pct(n){ return ((n||0)*100).toFixed(1)+"%"; }
+function pct(n){ return (n||0).toFixed(1) + "%"; }
