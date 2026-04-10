@@ -89,15 +89,20 @@ export function normalizeData(dataset, rows) {
         return rows.map(r => ({
             style_id: r.style_id,
             brand: r.brand,
+
             impressions: Number(r.impressions) || 0,
             clicks: Number(r.clicks) || 0,
             add_to_carts: Number(r.add_to_carts) || 0,
             purchases: Number(r.purchases) || 0,
 
+            // 🔥 FIX FOR ENGINE
             add_to_cart: Number(r.add_to_carts) || 0,
 
             atc: Number(r.add_to_carts) || 0,
-            orders: Number(r.purchases) || 0
+            orders: Number(r.purchases) || 0,
+
+            // 🔥 NEW (CRITICAL)
+            rating: Number(r.rating) || 0
         }));
     }
 
@@ -133,7 +138,11 @@ export function normalizeData(dataset, rows) {
             erp_sku: r.erp_sku,
             launch_date: r.launch_date,
             live_date: r.live_date,
-            tp: Number(r.tp) || 0
+            tp: Number(r.tp) || 0,
+
+            // 🔥 NEW (CRITICAL FIX)
+            brand: r.brand,
+            status: r.status
         }));
     }
 
