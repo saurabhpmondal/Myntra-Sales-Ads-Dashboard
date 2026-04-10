@@ -1,12 +1,33 @@
 import { buildSJITPlanning } from "./engine.js";
 
+let FULL_DATA = [];
+let visibleCount = 50;
+
 export function renderSJITPlanning(){
 
     const container = document.getElementById("reportContainer");
 
-    const data = buildSJITPlanning();
+    FULL_DATA = buildSJITPlanning()
+        .sort((a,b) => (b.shipment || 0) - (a.shipment || 0)); // 🔥 SORT
 
-    const rows = data.map(r => `
+    visibleCount = 50;
+
+    renderTable();
+}
+
+/* ========================= */
+
+function renderTable(){
+
+    const container = document.getElementById("reportContainer");
+
+    const data = FULL_DATA.slice(0, visibleCount);
+
+    const rows = data.map(r => {
+
+        const returnFlag = r.return_pct > 0.4 ? "HIGH RETURN" : "";
+
+        return `
         <tr>
             <td>${r.style_id}</td>
             <td>${r.brand || "-"}</td>
@@ -16,7 +37,9 @@ export function renderSJITPlanning(){
 
             <td>${r.gross}</td>
             <td>${r.return}</td>
-            <td>${pct(r.return_pct)}</td>
+            <td class="${r.return_pct > 0.4 ? "red" : ""}">
+                ${pct(r.return_pct)} ${returnFlag}
+            </td>
             <td>${r.net}</td>
 
             <td>${fmt2(r.drr)}</td>
@@ -28,18 +51,23 @@ export function renderSJITPlanning(){
 
             <td>${r.priority}</td>
             <td>${r.action}</td>
-            <td>${r.remark}</td>
+            <td class="${r.remark === "HIGH RISK" ? "red" : ""}">
+                ${r.remark}
+            </td>
         </tr>
-    `).join("");
+    `}).join("");
 
     container.innerHTML = `
         <div class="card table-card">
 
             <h3>SJIT PO Planning</h3>
 
-            <div style="text-align:right; margin-bottom:8px;">
-                <input id="sjitSearch" placeholder="Search Style..." />
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+
                 <button onclick="downloadSJIT()">Export</button>
+
+                <input id="sjitSearch" placeholder="Search Style..." oninput="searchSJIT(this.value)" />
+
             </div>
 
             <div class="table-wrapper">
@@ -73,25 +101,51 @@ export function renderSJITPlanning(){
                 </table>
             </div>
 
+            ${
+                visibleCount < FULL_DATA.length
+                ? `<div style="text-align:center; margin-top:10px;">
+                        <button onclick="loadMoreSJIT()">Load More</button>
+                   </div>`
+                : ""
+            }
+
         </div>
     `;
 }
 
 /* ========================= */
+/* LOAD MORE */
 
-function fmt2(n){ return Number(n||0).toFixed(2); }
-function pct(n){ return ((n||0)*100).toFixed(1)+"%"; }
+window.loadMoreSJIT = function(){
+    visibleCount += 50;
+    renderTable();
+};
 
 /* ========================= */
-/* EXPORT */
+/* SEARCH */
+
+window.searchSJIT = function(val){
+
+    val = val.toLowerCase();
+
+    const filtered = FULL_DATA.filter(r =>
+        (r.style_id || "").toLowerCase().includes(val)
+    );
+
+    visibleCount = 50;
+
+    FULL_DATA = filtered;
+    renderTable();
+};
+
+/* ========================= */
+/* EXPORT (FULL DATA SAFE) */
 
 window.downloadSJIT = function(){
 
-    const data = buildSJITPlanning();
+    let csv = Object.keys(FULL_DATA[0]).join(",") + "\n";
 
-    let csv = Object.keys(data[0]).join(",") + "\n";
-
-    data.forEach(r => {
+    FULL_DATA.forEach(r => {
         csv += Object.values(r).join(",") + "\n";
     });
 
@@ -103,3 +157,8 @@ window.downloadSJIT = function(){
     a.download = "sjit_planning.csv";
     a.click();
 };
+
+/* ========================= */
+
+function fmt2(n){ return Number(n||0).toFixed(2); }
+function pct(n){ return ((n||0)*100).toFixed(1)+"%"; }
