@@ -41,9 +41,9 @@ export function normalizeData(dataset, rows) {
                 roi_total: Number(r.roi_total) || 0,
 
                 campaign_name: r.campaign_name,
+                adgroup_name: r.adgroup_name,
+                adgroup_id: r.adgroup_id,
 
-adgroup_name: r.adgroup_name,
-adgroup_id: r.adgroup_id,
                 date: formattedDate
             };
         });
@@ -62,13 +62,12 @@ adgroup_id: r.adgroup_id,
 
     if (dataset === "PPR") {
         return rows.map(r => ({
-            // 🔥 EXISTING (UNCHANGED)
             placement: r.placement,
 
-campaign_name: r.campaign_name,
-campaign_id: r.campaign_id,
-adgroup_name: r.adgroup_name,
-adgroup_id: r.adgroup_id,
+            campaign_name: r.campaign_name,
+            campaign_id: r.campaign_id,
+            adgroup_name: r.adgroup_name,
+            adgroup_id: r.adgroup_id,
 
             spend: Number(r.budget_spend) || 0,
             revenue: Number(r.total_revenue) || 0,
@@ -76,12 +75,10 @@ adgroup_id: r.adgroup_id,
             impressions: Number(r.impressions) || 0,
             month: r.month,
 
-            // 🔥 ADDED (FOR UNITS FIX)
             direct_units_sold: Number(r.units_sold_direct) || 0,
             indirect_units_sold: Number(r.units_sold_indirect) || 0,
             units_sold_total: Number(r.units_sold_total) || 0,
 
-            // 🔥 ADDED (FOR REVENUE + ROI)
             direct_revenue: Number(r.direct_revenue) || 0,
             indirect_revenue: Number(r.indirect_revenue) || 0,
             roi_total: Number(r.roi_total) || 0
@@ -90,7 +87,6 @@ adgroup_id: r.adgroup_id,
 
     if (dataset === "TRAFFIC") {
         return rows.map(r => ({
-            // 🔥 EXISTING
             style_id: r.style_id,
             brand: r.brand,
             impressions: Number(r.impressions) || 0,
@@ -98,9 +94,47 @@ adgroup_id: r.adgroup_id,
             add_to_carts: Number(r.add_to_carts) || 0,
             purchases: Number(r.purchases) || 0,
 
-            // 🔥 ALIAS FIX (CRITICAL)
+            // 🔥 FIX FOR ENGINE
+            add_to_cart: Number(r.add_to_carts) || 0,
+
             atc: Number(r.add_to_carts) || 0,
             orders: Number(r.purchases) || 0
+        }));
+    }
+
+    /* =========================================================
+       🔥 NEW DATASETS (ONLY ADDED — NO TOUCH ABOVE)
+    ========================================================= */
+
+    if (dataset === "sjit_stock") {
+        return rows.map(r => ({
+            style_id: r.style_id,
+            sellable_inventory_count: Number(r.sellable_inventory_count) || 0,
+            inventory_count: Number(r.inventory_count) || 0
+        }));
+    }
+
+    if (dataset === "sor_stock") {
+        return rows.map(r => ({
+            style_id: r.style_id,
+            units: Number(r.units) || 0
+        }));
+    }
+
+    if (dataset === "seller_stock") {
+        return rows.map(r => ({
+            erp_sku: r.erp_sku,
+            units: Number(r.units) || 0
+        }));
+    }
+
+    if (dataset === "product_master") {
+        return rows.map(r => ({
+            style_id: r.style_id,
+            erp_sku: r.erp_sku,
+            launch_date: r.launch_date,
+            live_date: r.live_date,
+            tp: Number(r.tp) || 0
         }));
     }
 
