@@ -75,3 +75,23 @@ body {
 .card {
     margin-bottom: 16px;
 }
+
+.row-recall {
+    background: #ffe5e5;
+}
+
+.high-return {
+    color: #d97706;
+    font-weight: 600;
+}
+
+.table-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.table-actions input {
+    padding: 6px;
+    width: 180px;
+}
