@@ -9,11 +9,10 @@ export function renderSJITPlanning(){
 
     const container = document.getElementById("reportContainer");
 
-    // 🔥 Prevent heavy blocking (async render)
     setTimeout(() => {
 
         FULL_DATA = (buildSJITPlanning() || [])
-            .filter(r => r.style_id && !isNaN(r.style_id)) // ✅ remove invalid styles
+            .filter(r => r.style_id && !isNaN(r.style_id))
             .sort((a,b) => (b.shipment || 0) - (a.shipment || 0));
 
         ORIGINAL_DATA = [...FULL_DATA];
@@ -35,12 +34,9 @@ function renderTable(){
 
     const rows = data.map(r => {
 
-        /* 🔥 UI ONLY TRANSFORM (NO ENGINE CHANGE) */
-
         let shipment = r.shipment;
         let remarks = [];
 
-        // ✅ status control
         const status = (r.status || "").toLowerCase();
 
         if (status === "discontinued"){
@@ -53,18 +49,15 @@ function renderTable(){
             remarks.push("SPECIAL");
         }
 
-        // ✅ high return
         if (r.return_pct > 0.45){
             remarks.push("HIGH RETURN");
         }
 
-        // ✅ recall
         const isRecall = r.sc >= 90;
         if (isRecall){
             remarks.push("RECALL");
         }
 
-        // ✅ existing remark
         if (r.remark){
             remarks.push(r.remark);
         }
@@ -73,7 +66,11 @@ function renderTable(){
 
         return `
         <tr class="${isRecall ? "row-recall" : ""}">
-            <td>${r.style_id}</td>
+            <td>
+                ${r.style_id 
+                    ? `<a href="https://www.myntra.com/${r.style_id}" target="_blank" class="style-link">${r.style_id}</a>` 
+                    : "-"}
+            </td>
             <td>${r.brand || "-"}</td>
             <td>${r.erp_sku || "-"}</td>
             <td>${r.status || "-"}</td>
@@ -179,24 +176,20 @@ function bindSearch(){
             visibleCount = 50;
             renderTable();
 
-        }, 300); // 🔥 debounce
+        }, 300);
     };
 }
 
 /* ========================= */
-/* LOAD MORE */
 
 window.loadMoreSJIT = function(){
     visibleCount += 50;
     renderTable();
 };
 
-/* ========================= */
-/* EXPORT */
-
 window.downloadSJIT = function(){
 
-    const data = ORIGINAL_DATA; // ✅ full dataset always
+    const data = ORIGINAL_DATA;
 
     let csv = Object.keys(data[0]).join(",") + "\n";
 
