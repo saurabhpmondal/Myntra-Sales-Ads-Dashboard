@@ -114,3 +114,47 @@ export function normalizeData(dataset, rows) {
     }
 
     if (dataset === "sor_stock") {
+        return rows.map(r => ({
+            style_id: r.style_id,
+            units: Number(r.units) || 0
+        }));
+    }
+
+    if (dataset === "seller_stock") {
+        return rows.map(r => ({
+            erp_sku: r.erp_sku,
+            units: Number(r.units) || 0
+        }));
+    }
+
+    if (dataset === "product_master") {
+        return rows.map(r => ({
+            style_id: r.style_id,
+            erp_sku: r.erp_sku,
+            launch_date: r.launch_date,
+            live_date: r.live_date,
+            tp: Number(r.tp) || 0
+        }));
+    }
+
+    /* =========================================================
+       🔥 PO DATASETS (SAFE ADD — HANDLES BOTH HEADER TYPES)
+    ========================================================= */
+
+    if (dataset === "PO_Seller_Orders_Report") {
+        return rows.map(r => ({
+            style_id: (r.style_id || r["style id"] || "").toString().trim(),
+            brand: r.brand,
+            state: (r.state || "").toString().trim(),
+            order_line_id: (r.order_line_id || r["order line id"] || "").toString().trim()
+        }));
+    }
+
+    if (dataset === "PO_Seller_Returns_Report") {
+        return rows.map(r => ({
+            order_line_id: (r.order_line_id || r["order line id"] || "").toString().trim()
+        }));
+    }
+
+    return rows;
+}
