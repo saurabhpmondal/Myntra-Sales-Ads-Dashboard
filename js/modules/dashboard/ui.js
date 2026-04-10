@@ -8,8 +8,11 @@ import { runAlerts } from "../alerts/binder.js";
 import { runTopStyles } from "../topStyles/binder.js";
 import { runDayWise } from "../dayWise/binder.js";
 
-// 🔥 ADD THIS
+// 🔥 EXISTING
 import { runDeepDive } from "../deepDive/binder.js";
+
+// 🔥 NEW ADD (SJIT PLANNING)
+import { runSJITPlanning } from "../sjitPlanning/binder.js";
 
 export function renderDashboard(data) {
 
@@ -65,7 +68,8 @@ export function renderDashboard(data) {
                 ${tab("alerts","Alerts")}
                 ${tab("topstyles","Top Styles")}
                 ${tab("daywise","Day Wise")}
-                ${tab("deepdive","Deep Dive")} <!-- 🔥 NEW -->
+                ${tab("deepdive","Deep Dive")}
+                ${tab("sjit","SJIT Planning")} <!-- 🔥 NEW TAB -->
             </div>
 
             <div id="reportContainer" class="card"></div>
@@ -115,14 +119,16 @@ function renderReport(type){
     if (type === "topstyles") return runTopStyles();
     if (type === "daywise") return runDayWise();
 
-    // 🔥 ADD THIS
     if (type === "deepdive") return runDeepDive();
+
+    // 🔥 NEW ROUTE
+    if (type === "sjit") return runSJITPlanning();
 
     document.getElementById("reportContainer").innerHTML =
         `<div style="padding:20px">${type.toUpperCase()} coming next</div>`;
 }
 
-/* helpers unchanged */
+/* ========================= */
 
 function kpi(title, value, type, k){
     const signal = getSignal(type, k);
