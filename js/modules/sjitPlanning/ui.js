@@ -1,18 +1,28 @@
 import { buildSJITPlanning } from "./engine.js";
 
 let FULL_DATA = [];
+let ORIGINAL_DATA = [];
 let visibleCount = 50;
+let debounceTimer = null;
 
 export function renderSJITPlanning(){
 
     const container = document.getElementById("reportContainer");
 
-    FULL_DATA = buildSJITPlanning()
-        .sort((a,b) => (b.shipment || 0) - (a.shipment || 0)); // 🔥 SORT
+    // 🔥 Prevent heavy blocking (async render)
+    setTimeout(() => {
 
-    visibleCount = 50;
+        FULL_DATA = (buildSJITPlanning() || [])
+            .filter(r => r.style_id && !isNaN(r.style_id)) // ✅ remove invalid styles
+            .sort((a,b) => (b.shipment || 0) - (a.shipment || 0));
 
-    renderTable();
+        ORIGINAL_DATA = [...FULL_DATA];
+
+        visibleCount = 50;
+
+        renderTable();
+
+    }, 0);
 }
 
 /* ========================= */
@@ -25,10 +35,44 @@ function renderTable(){
 
     const rows = data.map(r => {
 
-        const returnFlag = r.return_pct > 0.4 ? "HIGH RETURN" : "";
+        /* 🔥 UI ONLY TRANSFORM (NO ENGINE CHANGE) */
+
+        let shipment = r.shipment;
+        let remarks = [];
+
+        // ✅ status control
+        const status = (r.status || "").toLowerCase();
+
+        if (status === "discontinued"){
+            shipment = 0;
+            remarks.push("DO NOT SHIP");
+        }
+
+        if (status === "special"){
+            shipment = 0;
+            remarks.push("SPECIAL");
+        }
+
+        // ✅ high return
+        if (r.return_pct > 0.45){
+            remarks.push("HIGH RETURN");
+        }
+
+        // ✅ recall
+        const isRecall = r.sc >= 90;
+        if (isRecall){
+            remarks.push("RECALL");
+        }
+
+        // ✅ existing remark
+        if (r.remark){
+            remarks.push(r.remark);
+        }
+
+        const finalRemark = remarks.join(" | ") || "-";
 
         return `
-        <tr>
+        <tr class="${isRecall ? "row-recall" : ""}">
             <td>${r.style_id}</td>
             <td>${r.brand || "-"}</td>
             <td>${r.erp_sku || "-"}</td>
@@ -37,8 +81,8 @@ function renderTable(){
 
             <td>${r.gross}</td>
             <td>${r.return}</td>
-            <td class="${r.return_pct > 0.4 ? "red" : ""}">
-                ${pct(r.return_pct)} ${returnFlag}
+            <td class="${r.return_pct > 0.45 ? "high-return" : ""}">
+                ${pct(r.return_pct)}
             </td>
             <td>${r.net}</td>
 
@@ -46,37 +90,31 @@ function renderTable(){
             <td>${r.sjit}</td>
             <td>${fmt2(r.sc)}</td>
 
-            <td class="green">${r.shipment}</td>
-            <td class="red">${r.recall}</td>
+            <td class="green">${Math.round(shipment)}</td>
+            <td class="red">${Math.round(r.recall)}</td>
 
-            <td>${r.priority}</td>
-            <td>${r.action}</td>
-            <td class="${r.remark === "HIGH RISK" ? "red" : ""}">
-                ${r.remark}
-            </td>
+            <td>${finalRemark}</td>
         </tr>
-    `}).join("");
+    `;
+    }).join("");
 
     container.innerHTML = `
         <div class="card table-card">
 
             <h3>SJIT PO Planning</h3>
 
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:10px;">
+                <input id="sjitSearch" placeholder="Search Style..." />
                 <button onclick="downloadSJIT()">Export</button>
-
-                <input id="sjitSearch" placeholder="Search Style..." oninput="searchSJIT(this.value)" />
-
             </div>
 
             <div class="table-wrapper">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Style</th>
+                            <th>Style ID</th>
                             <th>Brand</th>
-                            <th>ERP</th>
+                            <th>ERP SKU</th>
                             <th>Status</th>
                             <th>Rating</th>
 
@@ -92,8 +130,6 @@ function renderTable(){
                             <th>Shipment</th>
                             <th>Recall</th>
 
-                            <th>Priority</th>
-                            <th>Action</th>
                             <th>Remark</th>
                         </tr>
                     </thead>
@@ -111,6 +147,40 @@ function renderTable(){
 
         </div>
     `;
+
+    bindSearch();
+}
+
+/* ========================= */
+/* 🔥 SEARCH WITH DEBOUNCE */
+
+function bindSearch(){
+
+    const input = document.getElementById("sjitSearch");
+
+    if (!input) return;
+
+    input.oninput = function(){
+
+        clearTimeout(debounceTimer);
+
+        debounceTimer = setTimeout(() => {
+
+            const val = input.value.toLowerCase();
+
+            if (!val){
+                FULL_DATA = [...ORIGINAL_DATA];
+            } else {
+                FULL_DATA = ORIGINAL_DATA.filter(r =>
+                    (r.style_id || "").toLowerCase().includes(val)
+                );
+            }
+
+            visibleCount = 50;
+            renderTable();
+
+        }, 300); // 🔥 debounce
+    };
 }
 
 /* ========================= */
@@ -122,30 +192,15 @@ window.loadMoreSJIT = function(){
 };
 
 /* ========================= */
-/* SEARCH */
-
-window.searchSJIT = function(val){
-
-    val = val.toLowerCase();
-
-    const filtered = FULL_DATA.filter(r =>
-        (r.style_id || "").toLowerCase().includes(val)
-    );
-
-    visibleCount = 50;
-
-    FULL_DATA = filtered;
-    renderTable();
-};
-
-/* ========================= */
-/* EXPORT (FULL DATA SAFE) */
+/* EXPORT */
 
 window.downloadSJIT = function(){
 
-    let csv = Object.keys(FULL_DATA[0]).join(",") + "\n";
+    const data = ORIGINAL_DATA; // ✅ full dataset always
 
-    FULL_DATA.forEach(r => {
+    let csv = Object.keys(data[0]).join(",") + "\n";
+
+    data.forEach(r => {
         csv += Object.values(r).join(",") + "\n";
     });
 
