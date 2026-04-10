@@ -126,7 +126,11 @@ function row(r){
 
     let html = `
         <tr>
-            <td>${r.style_id}</td>
+            <td>
+                ${r.style_id 
+                    ? `<a href="https://www.myntra.com/${r.style_id}" target="_blank" class="style-link">${r.style_id}</a>` 
+                    : "-"}
+            </td>
             <td>${fmt(r.total)}</td>
             <td>${r.trend}</td>
             <td class="${momClass(r.momentum)}">${pct(r.momentum)}</td>
