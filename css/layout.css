@@ -24,3 +24,54 @@ body {
     flex-direction: column;
     gap: 20px;
 }
+
+/* 🔥 Deep Dive Spacing Fix */
+
+.dd-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.dd-score {
+    text-align: center;
+}
+
+.dd-big {
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.dd-label {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.dd-momentum {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.dd-insights {
+    margin: 12px 0 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.badge {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    background: #f3f4f6;
+}
+
+.badge.good { background: #dcfce7; }
+.badge.bad { background: #fee2e2; }
+.badge.warning { background: #fef3c7; }
+
+/* spacing between sections */
+.card {
+    margin-bottom: 16px;
+}
