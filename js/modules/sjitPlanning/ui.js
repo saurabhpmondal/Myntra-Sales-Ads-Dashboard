@@ -35,28 +35,47 @@ function renderTable(){
     const rows = data.map(r => {
 
         let shipment = r.shipment;
+        let recall = r.recall;
         let remarks = [];
 
         const status = (r.status || "").toLowerCase();
 
-        if (status === "discontinued"){
+        /* =========================
+           🔥 RULE 1: STATUS CONTROL
+        ========================= */
+
+        if (["discontinued","special","clearance"].includes(status)){
             shipment = 0;
+            recall = r.sjit; // FULL RECALL
             remarks.push("DO NOT SHIP");
         }
 
-        if (status === "special"){
-            shipment = 0;
-            remarks.push("SPECIAL");
-        }
+        /* =========================
+           🔥 RULE 2: RETURN LOGIC
+        ========================= */
 
         if (r.return_pct > 0.45){
-            remarks.push("HIGH RETURN");
+            if (!(r.gross >= 30)){
+                remarks.push("HIGH RETURN");
+            }
         }
+
+        if (r.return_pct > 0.35 && r.return_pct < 0.45){
+            remarks.push("RISK OF RETURN");
+        }
+
+        /* =========================
+           🔥 RULE 3: RECALL FLAG
+        ========================= */
 
         const isRecall = r.sc >= 90;
         if (isRecall){
             remarks.push("RECALL");
         }
+
+        /* =========================
+           🔥 EXISTING REMARK
+        ========================= */
 
         if (r.remark){
             remarks.push(r.remark);
@@ -88,7 +107,7 @@ function renderTable(){
             <td>${fmt2(r.sc)}</td>
 
             <td class="green">${Math.round(shipment)}</td>
-            <td class="red">${Math.round(r.recall)}</td>
+            <td class="red">${Math.round(recall)}</td>
 
             <td>${finalRemark}</td>
         </tr>
@@ -188,7 +207,7 @@ window.loadMoreSJIT = function(){
 };
 
 /* ========================= */
-/* 🔥 FIXED EXPORT */
+/* 🔥 FIXED EXPORT (SAME RULES APPLIED) */
 
 window.downloadSJIT = function(){
 
@@ -206,22 +225,25 @@ window.downloadSJIT = function(){
     data.forEach(r => {
 
         let shipment = r.shipment;
+        let recall = r.recall;
         let remarks = [];
 
         const status = (r.status || "").toLowerCase();
 
-        if (status === "discontinued"){
+        if (["discontinued","special","clearance"].includes(status)){
             shipment = 0;
+            recall = r.sjit;
             remarks.push("DO NOT SHIP");
         }
 
-        if (status === "special"){
-            shipment = 0;
-            remarks.push("SPECIAL");
+        if (r.return_pct > 0.45){
+            if (!(r.gross >= 30)){
+                remarks.push("HIGH RETURN");
+            }
         }
 
-        if (r.return_pct > 0.45){
-            remarks.push("HIGH RETURN");
+        if (r.return_pct > 0.35 && r.return_pct < 0.45){
+            remarks.push("RISK OF RETURN");
         }
 
         const isRecall = r.sc >= 90;
@@ -252,7 +274,7 @@ window.downloadSJIT = function(){
             fmt2(r.sc),
 
             Math.round(shipment),
-            Math.round(r.recall),
+            Math.round(recall),
 
             `"${finalRemark}"`
         ].join(",") + "\n";
