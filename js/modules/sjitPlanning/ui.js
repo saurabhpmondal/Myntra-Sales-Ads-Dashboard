@@ -112,22 +112,22 @@ function renderTable(){
                             <th>Style ID</th>
                             <th>Brand</th>
                             <th>ERP SKU</th>
-                            <th>Status</th>
+                            <th>ERP Status</th>
                             <th>Rating</th>
 
-                            <th>Gross</th>
-                            <th>Return</th>
+                            <th>Gross (U) </th>
+                            <th>Return (U) </th>
                             <th>Return%</th>
-                            <th>Net</th>
+                            <th>Net (U) </th>
 
                             <th>DRR</th>
-                            <th>SJIT</th>
+                            <th>SJIT STOCK</th>
                             <th>SC</th>
 
-                            <th>Shipment</th>
-                            <th>Recall</th>
+                            <th>Shipment QTY</th>
+                            <th>Recall QTY</th>
 
-                            <th>Remark</th>
+                            <th>Remarks</th>
                         </tr>
                     </thead>
                     <tbody>${rows}</tbody>
