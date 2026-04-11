@@ -115,10 +115,10 @@ function renderTable(){
                             <th>ERP Status</th>
                             <th>Rating</th>
 
-                            <th>Gross (U) </th>
-                            <th>Return (U) </th>
+                            <th>Gross (U)</th>
+                            <th>Return (U)</th>
                             <th>Return%</th>
-                            <th>Net (U) </th>
+                            <th>Net (U)</th>
 
                             <th>DRR</th>
                             <th>SJIT STOCK</th>
@@ -187,14 +187,76 @@ window.loadMoreSJIT = function(){
     renderTable();
 };
 
+/* ========================= */
+/* 🔥 FIXED EXPORT */
+
 window.downloadSJIT = function(){
 
     const data = ORIGINAL_DATA;
 
-    let csv = Object.keys(data[0]).join(",") + "\n";
+    const headers = [
+        "Style ID","Brand","ERP SKU","ERP Status","Rating",
+        "Gross","Return","Return%","Net",
+        "DRR","SJIT STOCK","SC",
+        "Shipment QTY","Recall QTY","Remarks"
+    ];
+
+    let csv = headers.join(",") + "\n";
 
     data.forEach(r => {
-        csv += Object.values(r).join(",") + "\n";
+
+        let shipment = r.shipment;
+        let remarks = [];
+
+        const status = (r.status || "").toLowerCase();
+
+        if (status === "discontinued"){
+            shipment = 0;
+            remarks.push("DO NOT SHIP");
+        }
+
+        if (status === "special"){
+            shipment = 0;
+            remarks.push("SPECIAL");
+        }
+
+        if (r.return_pct > 0.45){
+            remarks.push("HIGH RETURN");
+        }
+
+        const isRecall = r.sc >= 90;
+        if (isRecall){
+            remarks.push("RECALL");
+        }
+
+        if (r.remark){
+            remarks.push(r.remark);
+        }
+
+        const finalRemark = remarks.join(" | ") || "-";
+
+        csv += [
+            r.style_id,
+            r.brand || "-",
+            r.erp_sku || "-",
+            r.status || "-",
+            fmt2(r.rating),
+
+            r.gross,
+            r.return,
+            pct(r.return_pct),
+            r.net,
+
+            fmt2(r.drr),
+            r.sjit,
+            fmt2(r.sc),
+
+            Math.round(shipment),
+            Math.round(r.recall),
+
+            `"${finalRemark}"`
+        ].join(",") + "\n";
+
     });
 
     const blob = new Blob([csv], { type: "text/csv" });
