@@ -132,6 +132,26 @@ function renderMainDashboard(){
                 </div>
             </div>
 
+            <div class="card table-card">
+                <h3>PO Type Contribution</h3>
+
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>PO Type</th>
+                                <th>GMV</th>
+                                <th>Units</th>
+                                <th>Share %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${poRows(data.poTypeMap, k.gmv)}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     `;
 
@@ -248,7 +268,7 @@ function brandRows(map={}){
     const totalASP = totalUnits ? totalGMV / totalUnits : 0;
 
     return html + `
-        <tr style="font-weight:700; background:rgba(255,255,255,0.06);">
+        <tr style="font-weight:700;background:rgba(255,255,255,0.06);">
             <td>GRAND TOTAL</td>
             <td>${fmt(totalGMV)}</td>
             <td>${fmt(totalUnits)}</td>
@@ -258,6 +278,32 @@ function brandRows(map={}){
             <td>${fmt(totalSOR)}</td>
         </tr>
     `;
+}
+
+/* ========================= */
+
+function poRows(map={}, totalGMV=0){
+
+    const keys = ["PPMP","SJIT","SOR"];
+
+    let html = "";
+
+    keys.forEach(k => {
+
+        const row = map[k] || { gmv:0, units:0 };
+        const share = totalGMV ? (row.gmv / totalGMV) * 100 : 0;
+
+        html += `
+            <tr>
+                <td>${k}</td>
+                <td>${fmt(row.gmv)}</td>
+                <td>${fmt(row.units)}</td>
+                <td>${fmt2(share)}%</td>
+            </tr>
+        `;
+    });
+
+    return html;
 }
 
 /* ========================= */
