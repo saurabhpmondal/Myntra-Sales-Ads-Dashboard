@@ -12,7 +12,7 @@ import { runSJITPlanning } from "../sjitPlanning/binder.js";
 
 let DASHBOARD_DATA = {};
 
-export function renderDashboard(data) {
+export function renderDashboard(data){
 
     DASHBOARD_DATA = data || {};
 
@@ -50,14 +50,14 @@ function initTabs(){
 
     const tabs = document.querySelectorAll(".tab");
 
-    tabs.forEach(tab => {
+    tabs.forEach(tabEl => {
 
-        tab.onclick = () => {
+        tabEl.onclick = () => {
 
             tabs.forEach(t => t.classList.remove("active"));
-            tab.classList.add("active");
+            tabEl.classList.add("active");
 
-            renderReport(tab.dataset.type);
+            renderReport(tabEl.dataset.type);
         };
     });
 }
@@ -80,7 +80,7 @@ function renderReport(type){
     if (type === "sjit") return runSJITPlanning();
 
     document.getElementById("reportContainer").innerHTML =
-        `<div class="card" style="padding:20px">${type} coming soon</div>`;
+        `<div class="card" style="padding:20px;">Coming Soon</div>`;
 }
 
 /* ========================= */
@@ -143,14 +143,21 @@ function renderMainDashboard(){
 function renderCharts(data){
 
     const sales = data.charts?.sales || {};
-    const unitsMap = data.charts?.units || {};
+    const units = data.charts?.units || {};
 
     const labels = Object.keys(sales);
 
-    const gmv = labels.map(d => sales[d] || 0);
-    const units = labels.map(d => unitsMap[d] || 0);
+    const salesValues = labels.map(k => sales[k] || 0);
+    const unitValues = labels.map(k => units[k] || 0);
 
-    renderLineChart("salesChart", labels, gmv, units, "GMV", "Units");
+    renderLineChart(
+        "salesChart",
+        labels,
+        salesValues,
+        unitValues,
+        "GMV",
+        "Units"
+    );
 }
 
 /* ========================= */
@@ -197,16 +204,35 @@ function neutral(){ return { class:"", icon:"" }; }
 /* ========================= */
 
 function tab(id, name, active=false){
-    return `<div class="tab ${active ? "active" : ""}" data-type="${id}">${name}</div>`;
+    return `
+        <div class="tab ${active ? "active" : ""}" data-type="${id}">
+            ${name}
+        </div>
+    `;
 }
 
 /* ========================= */
 
 function brandRows(map={}){
 
-    return Object.entries(map)
-        .sort((a,b) => (b[1].gmv || 0) - (a[1].gmv || 0))
-        .map(([brand,v]) => `
+    const rows = Object.entries(map)
+        .sort((a,b) => (b[1].gmv || 0) - (a[1].gmv || 0));
+
+    let totalGMV = 0;
+    let totalUnits = 0;
+    let totalPPMP = 0;
+    let totalSJIT = 0;
+    let totalSOR = 0;
+
+    const html = rows.map(([brand,v]) => {
+
+        totalGMV += Number(v.gmv) || 0;
+        totalUnits += Number(v.units) || 0;
+        totalPPMP += Number(v.PPMP) || 0;
+        totalSJIT += Number(v.SJIT) || 0;
+        totalSOR += Number(v.SOR) || 0;
+
+        return `
             <tr>
                 <td>${brand}</td>
                 <td>${fmt(v.gmv)}</td>
@@ -216,7 +242,22 @@ function brandRows(map={}){
                 <td>${fmt(v.SJIT)}</td>
                 <td>${fmt(v.SOR)}</td>
             </tr>
-        `).join("");
+        `;
+    }).join("");
+
+    const totalASP = totalUnits ? totalGMV / totalUnits : 0;
+
+    return html + `
+        <tr style="font-weight:700; background:rgba(255,255,255,0.06);">
+            <td>GRAND TOTAL</td>
+            <td>${fmt(totalGMV)}</td>
+            <td>${fmt(totalUnits)}</td>
+            <td>${fmt2(totalASP)}</td>
+            <td>${fmt(totalPPMP)}</td>
+            <td>${fmt(totalSJIT)}</td>
+            <td>${fmt(totalSOR)}</td>
+        </tr>
+    `;
 }
 
 /* ========================= */
