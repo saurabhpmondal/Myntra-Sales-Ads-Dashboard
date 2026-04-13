@@ -95,19 +95,16 @@ export function normalizeData(dataset, rows) {
             add_to_carts: Number(r.add_to_carts) || 0,
             purchases: Number(r.purchases) || 0,
 
-            // 🔥 FIX FOR ENGINE
             add_to_cart: Number(r.add_to_carts) || 0,
-
             atc: Number(r.add_to_carts) || 0,
             orders: Number(r.purchases) || 0,
 
-            // 🔥 NEW (CRITICAL)
             rating: Number(r.rating) || 0
         }));
     }
 
     /* =========================================================
-       🔥 NEW DATASETS (ONLY ADDED — NO TOUCH ABOVE)
+       NEW DATASETS
     ========================================================= */
 
     if (dataset === "sjit_stock") {
@@ -139,23 +136,34 @@ export function normalizeData(dataset, rows) {
             launch_date: r.launch_date,
             live_date: r.live_date,
             tp: Number(r.tp) || 0,
-
-            // 🔥 NEW (CRITICAL FIX)
             brand: r.brand,
             status: r.status
         }));
     }
 
     /* =========================================================
-       🔥 PO DATASETS (SAFE ADD — HANDLES BOTH HEADER TYPES)
+       PO DATASETS
     ========================================================= */
 
     if (dataset === "PO_Seller_Orders_Report") {
         return rows.map(r => ({
             style_id: (r.style_id || r["style id"] || "").toString().trim(),
             brand: r.brand,
+
             state: (r.state || "").toString().trim(),
-            order_line_id: (r.order_line_id || r["order line id"] || "").toString().trim()
+
+            po_type: (
+                r.po_type ||
+                r["po_type"] ||
+                r["po type"] ||
+                ""
+            ).toString().trim().toUpperCase(),
+
+            order_line_id: (
+                r.order_line_id ||
+                r["order line id"] ||
+                ""
+            ).toString().trim()
         }));
     }
 
