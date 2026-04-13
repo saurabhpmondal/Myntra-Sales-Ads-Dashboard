@@ -7,21 +7,93 @@ import { runTraffic } from "../traffic/binder.js";
 import { runAlerts } from "../alerts/binder.js";
 import { runTopStyles } from "../topStyles/binder.js";
 import { runDayWise } from "../dayWise/binder.js";
-
-// 🔥 EXISTING
 import { runDeepDive } from "../deepDive/binder.js";
-
-// 🔥 NEW ADD (SJIT PLANNING)
 import { runSJITPlanning } from "../sjitPlanning/binder.js";
+
+let DASHBOARD_DATA = {};
 
 export function renderDashboard(data) {
 
-    const content = document.getElementById("content");
+    DASHBOARD_DATA = data || {};
 
-    const k = data.kpi || {};
+    const content = document.getElementById("content");
 
     content.innerHTML = `
         <div class="dashboard">
+
+            <div class="tabs">
+                ${tab("dashboard","Dashboard",true)}
+                ${tab("campaign","Campaign")}
+                ${tab("placement","Placement")}
+                ${tab("product","Daily Ads")}
+                ${tab("listings","Listings")}
+                ${tab("traffic","Traffic")}
+                ${tab("alerts","Alerts")}
+                ${tab("topstyles","Top Styles")}
+                ${tab("daywise","Day Wise")}
+                ${tab("deepdive","Deep Dive")}
+                ${tab("sjit","SJIT Planning")}
+            </div>
+
+            <div id="reportContainer"></div>
+
+        </div>
+    `;
+
+    initTabs();
+    renderReport("dashboard");
+}
+
+/* ========================= */
+
+function initTabs(){
+
+    const tabs = document.querySelectorAll(".tab");
+
+    tabs.forEach(tab => {
+
+        tab.onclick = () => {
+
+            tabs.forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+
+            renderReport(tab.dataset.type);
+        };
+    });
+}
+
+/* ========================= */
+
+function renderReport(type){
+
+    if (type === "dashboard") return renderMainDashboard();
+
+    if (type === "campaign") return runCampaign();
+    if (type === "placement") return runPlacement();
+    if (type === "product") return runDailyAds();
+    if (type === "listings") return runListings();
+    if (type === "traffic") return runTraffic();
+    if (type === "alerts") return runAlerts();
+    if (type === "topstyles") return runTopStyles();
+    if (type === "daywise") return runDayWise();
+    if (type === "deepdive") return runDeepDive();
+    if (type === "sjit") return runSJITPlanning();
+
+    document.getElementById("reportContainer").innerHTML =
+        `<div class="card" style="padding:20px">${type} coming soon</div>`;
+}
+
+/* ========================= */
+
+function renderMainDashboard(){
+
+    const data = DASHBOARD_DATA;
+    const k = data.kpi || {};
+
+    const container = document.getElementById("reportContainer");
+
+    container.innerHTML = `
+        <div class="dashboard-home">
 
             <div class="kpi-grid">
                 ${kpi("GMV", fmt(k.gmv), "gmv", k)}
@@ -39,6 +111,7 @@ export function renderDashboard(data) {
 
             <div class="card table-card">
                 <h3>Brand Performance</h3>
+
                 <div class="table-wrapper">
                     <table class="table">
                         <thead>
@@ -59,29 +132,15 @@ export function renderDashboard(data) {
                 </div>
             </div>
 
-            <div class="tabs">
-                ${tab("campaign","Campaign",true)}
-                ${tab("placement","Placement")}
-                ${tab("product","Daily Ads")}
-                ${tab("listings","Listings")}
-                ${tab("traffic","Traffic")}
-                ${tab("alerts","Alerts")}
-                ${tab("topstyles","Top Styles")}
-                ${tab("daywise","Day Wise")}
-                ${tab("deepdive","Deep Dive")}
-                ${tab("sjit","SJIT Planning")} <!-- 🔥 NEW TAB -->
-            </div>
-
-            <div id="reportContainer" class="card"></div>
-
         </div>
     `;
 
     renderCharts(data);
-    initTabs();
 }
 
-function renderCharts(data) {
+/* ========================= */
+
+function renderCharts(data){
 
     const sales = data.charts?.sales || {};
     const unitsMap = data.charts?.units || {};
@@ -94,44 +153,12 @@ function renderCharts(data) {
     renderLineChart("salesChart", labels, gmv, units, "GMV", "Units");
 }
 
-function initTabs(){
-    const tabs = document.querySelectorAll(".tab");
-
-    tabs.forEach(tab=>{
-        tab.onclick = ()=>{
-            tabs.forEach(t=>t.classList.remove("active"));
-            tab.classList.add("active");
-            renderReport(tab.dataset.type);
-        };
-    });
-
-    renderReport("campaign");
-}
-
-function renderReport(type){
-
-    if (type === "campaign") return runCampaign();
-    if (type === "placement") return runPlacement();
-    if (type === "product") return runDailyAds();
-    if (type === "listings") return runListings();
-    if (type === "traffic") return runTraffic();
-    if (type === "alerts") return runAlerts();
-    if (type === "topstyles") return runTopStyles();
-    if (type === "daywise") return runDayWise();
-
-    if (type === "deepdive") return runDeepDive();
-
-    // 🔥 NEW ROUTE
-    if (type === "sjit") return runSJITPlanning();
-
-    document.getElementById("reportContainer").innerHTML =
-        `<div style="padding:20px">${type.toUpperCase()} coming next</div>`;
-}
-
 /* ========================= */
 
 function kpi(title, value, type, k){
+
     const signal = getSignal(type, k);
+
     return `
         <div class="kpi-card ${signal.class}">
             <h3>${title}</h3>
@@ -142,39 +169,49 @@ function kpi(title, value, type, k){
 }
 
 function getSignal(type, k){
+
     switch(type){
+
         case "roi":
             if (k.roi >= 3) return good();
             if (k.roi < 1) return bad();
             return neutral();
+
         case "spend":
             if (k.spend > k.revenue) return bad();
             return neutral();
+
         case "revenue":
             if (k.revenue > k.spend) return good();
             return neutral();
+
         default:
             return neutral();
     }
 }
 
-function good(){ return { class: "kpi-good", icon: "▲" }; }
-function bad(){ return { class: "kpi-bad", icon: "▼" }; }
-function neutral(){ return { class: "", icon: "" }; }
+function good(){ return { class:"kpi-good", icon:"▲" }; }
+function bad(){ return { class:"kpi-bad", icon:"▼" }; }
+function neutral(){ return { class:"", icon:"" }; }
+
+/* ========================= */
 
 function tab(id, name, active=false){
-    return `<div class="tab ${active?"active":""}" data-type="${id}">${name}</div>`;
+    return `<div class="tab ${active ? "active" : ""}" data-type="${id}">${name}</div>`;
 }
 
+/* ========================= */
+
 function brandRows(map={}){
+
     return Object.entries(map)
         .sort((a,b) => (b[1].gmv || 0) - (a[1].gmv || 0))
-        .map(([b,v])=>`
+        .map(([brand,v]) => `
             <tr>
-                <td>${b}</td>
+                <td>${brand}</td>
                 <td>${fmt(v.gmv)}</td>
                 <td>${fmt(v.units)}</td>
-                <td>${fmt2(v.units ? v.gmv/v.units : 0)}</td>
+                <td>${fmt2(v.units ? v.gmv / v.units : 0)}</td>
                 <td>${fmt(v.PPMP)}</td>
                 <td>${fmt(v.SJIT)}</td>
                 <td>${fmt(v.SOR)}</td>
@@ -182,5 +219,12 @@ function brandRows(map={}){
         `).join("");
 }
 
-function fmt(n){ return Number(n||0).toLocaleString(); }
-function fmt2(n){ return Number(n||0).toFixed(2); }
+/* ========================= */
+
+function fmt(n){
+    return Number(n || 0).toLocaleString();
+}
+
+function fmt2(n){
+    return Number(n || 0).toFixed(2);
+}
