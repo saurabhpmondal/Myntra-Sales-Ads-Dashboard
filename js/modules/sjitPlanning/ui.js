@@ -1,3 +1,5 @@
+// reports/sjitPlanning/ui.js
+
 import { buildSJITPlanning } from "./engine.js";
 
 let FULL_DATA = [];
@@ -7,13 +9,11 @@ let debounceTimer = null;
 
 export function renderSJITPlanning(){
 
-    const container = document.getElementById("reportContainer");
-
     setTimeout(() => {
 
         FULL_DATA = (buildSJITPlanning() || [])
-           .filter(r => r.style_id && !isNaN(r.style_id))
-           .sort((a,b) => (b.shipment || 0) - (a.shipment || 0));
+            .filter(r => r.style_id && !isNaN(r.style_id))
+            .sort((a,b) => (b.shipment || 0) - (a.shipment || 0));
 
         ORIGINAL_DATA = [...FULL_DATA];
 
@@ -36,44 +36,56 @@ function renderTable(){
 
         let shipment = r.shipment;
         let recall = r.recall;
-        let remarks = [];
 
         const status = (r.status || "").toLowerCase();
 
-        if (["discontinued","special","clearance"].includes(status)){
+        let remarks = [];
+
+        /* =========================
+           REMARK SYSTEM
+        ========================= */
+
+        if (
+            status.includes("discontinue") ||
+            status.includes("special") ||
+            status.includes("clearance")
+        ){
             shipment = 0;
             recall = r.sjit;
-            remarks.push("DO NOT SHIP");
+            remarks.push("Not Continue Style");
         }
 
         if (r.return_pct > 0.45){
-            if (!(r.gross >= 30)){
-                remarks.push("HIGH RETURN");
-            }
+            remarks.push("High Return");
+        }
+        else if (r.return_pct > 0.35){
+            remarks.push("Risk of High Return");
         }
 
-        if (r.return_pct > 0.35 && r.return_pct < 0.45){
-            remarks.push("RISK OF RETURN");
+        if (Number(r.rating || 0) > 0 && Number(r.rating) < 4){
+            remarks.push("Low Ratings");
         }
 
-        const isRecall = r.sc >= 90;
-        if (isRecall){
-            remarks.push("RECALL");
+        if (
+            remarks.length === 0 &&
+            r.return_pct < 0.35 &&
+            Number(r.rating || 0) >= 4
+        ){
+            remarks.push("NO RISK");
         }
 
-        if (r.remark){
-            remarks.push(r.remark);
-        }
+        const finalRemark = remarks.join(" | ");
 
-        const finalRemark = remarks.join(" | ") || "-";
+        const isRecall = recall > 0;
 
         return `
         <tr class="${isRecall ? "row-recall" : ""}">
             <td>
-                ${r.style_id 
-                    ? `<a href="https://www.myntra.com/${r.style_id}" target="_blank" class="style-link">${r.style_id}</a>` 
-                    : "-"}
+                <a href="https://www.myntra.com/${r.style_id}" target="_blank" class="style-link">
+                    ${r.style_id}
+                </a>
             </td>
+
             <td>${r.brand || "-"}</td>
             <td>${r.erp_sku || "-"}</td>
             <td>${r.status || "-"}</td>
@@ -81,21 +93,25 @@ function renderTable(){
 
             <td>${r.gross}</td>
             <td>${r.return}</td>
-            <td class="${r.return_pct > 0.45 ? "high-return" : ""}">
+            <td class="${r.return_pct > 0.35 ? "high-return" : ""}">
                 ${pct(r.return_pct)}
             </td>
             <td>${r.net}</td>
 
-            <td>${fmt2(r.drr)}</td>
-            <td>${r.sjit}</td>
-            <td>${fmt2(r.sc)}</td>
+            <td>${pct(r.ppmp_share)}</td>
+            <td>${pct(r.sjit_share)}</td>
+            <td>${r.zone}</td>
 
-            <td class="green">${Math.round(shipment)}</td>
-            <td class="red">${Math.round(recall)}</td>
+            <td>${fmt2(r.sc)}</td>
+            <td>${r.sjit}</td>
+            <td>${fmt2(r.drr)}</td>
+
+            <td class="green">${shipment}</td>
+            <td class="red">${recall}</td>
 
             <td>${finalRemark}</td>
         </tr>
-    `;
+        `;
     }).join("");
 
     container.innerHTML = `
@@ -103,7 +119,7 @@ function renderTable(){
 
             <h3>SJIT PO Planning</h3>
 
-            <div style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:10px;">
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-bottom:10px;">
                 <input id="sjitSearch" placeholder="Search Style..." />
                 <button onclick="downloadSJIT()">Export</button>
             </div>
@@ -118,10 +134,14 @@ function renderTable(){
                             <th>ERP Status</th>
                             <th>Rating</th>
 
-                            <th>Gross (U)</th>
-                            <th>Return (U)</th>
+                            <th>Gross</th>
+                            <th>Return</th>
                             <th>Return%</th>
-                            <th>Net (U)</th>
+                            <th>Net</th>
+
+                            <th>PPMP Share</th>
+                            <th>SJIT Share</th>
+                            <th>Zone</th>
 
                             <th>PDS</th>
                             <th>SJIT STOCK</th>
@@ -133,15 +153,18 @@ function renderTable(){
                             <th>Remarks</th>
                         </tr>
                     </thead>
+
                     <tbody>${rows}</tbody>
                 </table>
             </div>
 
             ${
                 visibleCount < FULL_DATA.length
-                ? `<div style="text-align:center; margin-top:10px;">
-                        <button onclick="loadMoreSJIT()">Load More</button>
-                   </div>`
+                ? `
+                <div style="text-align:center;margin-top:10px;">
+                    <button onclick="loadMoreSJIT()">Load More</button>
+                </div>
+                `
                 : ""
             }
 
@@ -171,7 +194,7 @@ function bindSearch(){
                 FULL_DATA = [...ORIGINAL_DATA];
             } else {
                 FULL_DATA = ORIGINAL_DATA.filter(r =>
-                    (r.style_id || "").toLowerCase().includes(val)
+                    String(r.style_id).toLowerCase().includes(val)
                 );
             }
 
@@ -198,7 +221,8 @@ window.downloadSJIT = function(){
     const headers = [
         "Style ID","Brand","ERP SKU","ERP Status","Rating",
         "Gross","Return","Return%","Net",
-        "DRR","SJIT STOCK","SC",
+        "PPMP Share","SJIT Share","Zone",
+        "PDS","SJIT STOCK","DRR",
         "Shipment QTY","Recall QTY","Remarks"
     ];
 
@@ -208,36 +232,39 @@ window.downloadSJIT = function(){
 
         let shipment = r.shipment;
         let recall = r.recall;
-        let remarks = [];
 
         const status = (r.status || "").toLowerCase();
 
-        if (["discontinued","special","clearance"].includes(status)){
+        let remarks = [];
+
+        if (
+            status.includes("discontinue") ||
+            status.includes("special") ||
+            status.includes("clearance")
+        ){
             shipment = 0;
             recall = r.sjit;
-            remarks.push("DO NOT SHIP");
+            remarks.push("Not Continue Style");
         }
 
         if (r.return_pct > 0.45){
-            if (!(r.gross >= 30)){
-                remarks.push("HIGH RETURN");
-            }
+            remarks.push("High Return");
+        }
+        else if (r.return_pct > 0.35){
+            remarks.push("Risk of High Return");
         }
 
-        if (r.return_pct > 0.35 && r.return_pct < 0.45){
-            remarks.push("RISK OF RETURN");
+        if (Number(r.rating || 0) > 0 && Number(r.rating) < 4){
+            remarks.push("Low Ratings");
         }
 
-        const isRecall = r.sc >= 90;
-        if (isRecall){
-            remarks.push("RECALL");
+        if (
+            remarks.length === 0 &&
+            r.return_pct < 0.35 &&
+            Number(r.rating || 0) >= 4
+        ){
+            remarks.push("NO RISK");
         }
-
-        if (r.remark){
-            remarks.push(r.remark);
-        }
-
-        const finalRemark = remarks.join(" | ") || "-";
 
         csv += [
             r.style_id,
@@ -251,19 +278,22 @@ window.downloadSJIT = function(){
             pct(r.return_pct),
             r.net,
 
-            fmt2(r.drr),
-            r.sjit,
+            pct(r.ppmp_share),
+            pct(r.sjit_share),
+            r.zone,
+
             fmt2(r.sc),
+            r.sjit,
+            fmt2(r.drr),
 
-            Math.round(shipment),
-            Math.round(recall),
+            shipment,
+            recall,
 
-            `"${finalRemark}"`
+            `"${remarks.join(" | ")}"`
         ].join(",") + "\n";
-
     });
 
-    const blob = new Blob([csv], { type: "text/csv" });
+    const blob = new Blob([csv], { type:"text/csv" });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
@@ -274,5 +304,10 @@ window.downloadSJIT = function(){
 
 /* ========================= */
 
-function fmt2(n){ return Number(n||0).toFixed(2); }
-function pct(n){ return ((n||0)*100).toFixed(1)+"%"; }
+function fmt2(n){
+    return Number(n || 0).toFixed(2);
+}
+
+function pct(n){
+    return ((n || 0) * 100).toFixed(1) + "%";
+}
