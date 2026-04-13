@@ -85,9 +85,9 @@ export function buildSJITPlanning(){
 
         let recall = 0;
 
-        if (sc >= 90){
-            const target90 = drr * 90;
-            recall = sjitStock - target90;
+        if (sc >= 60){
+            const target60 = drr * 60;
+            recall = sjitStock - target60;
             if (recall < 0) recall = 0;
         }
 
