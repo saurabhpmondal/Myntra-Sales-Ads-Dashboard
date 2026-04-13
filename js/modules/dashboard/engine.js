@@ -11,10 +11,6 @@ export function buildDashboard(data) {
         return (m || "").toString().trim().toUpperCase();
     }
 
-    /* =========================
-       LATEST MONTH DETECTION
-    ========================= */
-
     let latest = { y:0, m:0 };
 
     (data.SALES || []).forEach(r => {
@@ -31,10 +27,6 @@ export function buildDashboard(data) {
 
     const latestMonthStart =
         `${latest.y}-${String(latest.m).padStart(2,"0")}-01`;
-
-    /* =========================
-       DEFAULT END DATE = YESTERDAY
-    ========================= */
 
     const baseDate = new Date();
     baseDate.setDate(baseDate.getDate() - 1);
@@ -63,7 +55,6 @@ export function buildDashboard(data) {
             const y = Number(r.year);
 
             if (m !== latest.m || y !== latest.y) return false;
-
             if (d < latestMonthStart) return false;
             if (d > latestMonthEnd) return false;
         }
@@ -102,14 +93,18 @@ export function buildDashboard(data) {
         return true;
     });
 
-    /* =========================
-       KPI + MAPS
-    ========================= */
+    /* ========================= */
 
     let gmv = 0;
     let units = 0;
 
     const brandMap = {};
+    const poTypeMap = {
+        PPMP:{ gmv:0, units:0 },
+        SJIT:{ gmv:0, units:0 },
+        SOR:{ gmv:0, units:0 }
+    };
+
     const salesTrend = {};
     const unitsTrend = {};
     const adsTrend = {};
@@ -123,6 +118,7 @@ export function buildDashboard(data) {
         units += qty;
 
         const brand = r.brand || "UNKNOWN";
+        const po = (r.po_type || "SOR").toUpperCase();
 
         if (!brandMap[brand]) {
             brandMap[brand] = {
@@ -137,9 +133,21 @@ export function buildDashboard(data) {
         brandMap[brand].gmv += rev;
         brandMap[brand].units += qty;
 
-        if (r.po_type === "PPMP") brandMap[brand].PPMP += rev;
-        else if (r.po_type === "SJIT") brandMap[brand].SJIT += rev;
-        else brandMap[brand].SOR += rev;
+        if (po === "PPMP") {
+            brandMap[brand].PPMP += rev;
+            poTypeMap.PPMP.gmv += rev;
+            poTypeMap.PPMP.units += qty;
+        }
+        else if (po === "SJIT") {
+            brandMap[brand].SJIT += rev;
+            poTypeMap.SJIT.gmv += rev;
+            poTypeMap.SJIT.units += qty;
+        }
+        else {
+            brandMap[brand].SOR += rev;
+            poTypeMap.SOR.gmv += rev;
+            poTypeMap.SOR.units += qty;
+        }
 
         const key = buildDate(r);
 
@@ -157,10 +165,7 @@ export function buildDashboard(data) {
             : raw;
 
         if (!adsTrend[d]){
-            adsTrend[d] = {
-                spend:0,
-                revenue:0
-            };
+            adsTrend[d] = { spend:0, revenue:0 };
         }
 
         adsTrend[d].spend += Number(r.ad_spend) || 0;
@@ -199,7 +204,8 @@ export function buildDashboard(data) {
             units: cleanTrend(unitsTrend),
             ads: adsTrend
         },
-        brandMap
+        brandMap,
+        poTypeMap
     };
 }
 
