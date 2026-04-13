@@ -29,12 +29,20 @@ export function buildSJITPlanning(){
 
     /* =========================
        DAYS CALCULATION
+       🔥 FIXED = current date - 1 day
     ========================= */
 
-    const today = new Date();
-    const currentMonthDays = today.getDate();
+    const baseDate = new Date();
+    baseDate.setDate(baseDate.getDate() - 1);
 
-    const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    const currentMonthDays = baseDate.getDate();
+
+    const lastMonth = new Date(
+        baseDate.getFullYear(),
+        baseDate.getMonth(),
+        0
+    );
+
     const lastMonthDays = lastMonth.getDate();
 
     const totalDays = currentMonthDays + lastMonthDays;
@@ -52,6 +60,7 @@ export function buildSJITPlanning(){
         const gross = o.length;
 
         let ret = 0;
+
         o.forEach(r => {
             if (returnSet.has(r.order_line_id)) ret++;
         });
@@ -70,30 +79,42 @@ export function buildSJITPlanning(){
         ========================= */
 
         let sjitStock = 0;
+
         sjit.forEach(r => {
             if (r.style_id == style_id){
                 sjitStock += Number(r.sellable_inventory_count || 0);
             }
         });
 
-        // 🔥 FIXED SC (CORRECT FORMULA)
+        /* =========================
+           SC
+        ========================= */
+
         const sc = drr ? sjitStock / drr : 0;
 
         /* =========================
-           SHIPMENT (FIXED)
+           SHIPMENT
         ========================= */
 
-        const target = drr * 45;
-        let shipment = target - sjitStock;
+        const target45 = drr * 45;
+
+        let shipment = target45 - sjitStock;
+
         if (shipment < 0) shipment = 0;
 
         /* =========================
-           RECALL (FIXED)
+           RECALL
+           🔥 90D target
         ========================= */
 
         let recall = 0;
+
         if (sc >= 90){
-            recall = sjitStock - target;
+
+            const target90 = drr * 90;
+
+            recall = sjitStock - target90;
+
             if (recall < 0) recall = 0;
         }
 
@@ -109,6 +130,7 @@ export function buildSJITPlanning(){
         ========================= */
 
         let remark = "";
+
         if (net === 0 && sjitStock > 0){
             remark = "HIGH RISK";
         }
