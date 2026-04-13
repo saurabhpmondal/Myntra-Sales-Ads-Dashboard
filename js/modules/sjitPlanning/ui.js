@@ -123,9 +123,9 @@ function renderTable(){
                             <th>Return%</th>
                             <th>Net (U)</th>
 
-                            <th>DRR</th>
+                            <th>PDS</th>
                             <th>SJIT STOCK</th>
-                            <th>SC</th>
+                            <th>DRR</th>
 
                             <th>Shipment QTY</th>
                             <th>Recall QTY</th>
