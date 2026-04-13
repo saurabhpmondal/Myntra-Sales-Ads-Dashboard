@@ -11,6 +11,10 @@ export function buildDashboard(data) {
         return (m || "").toString().trim().toUpperCase();
     }
 
+    /* =========================
+       LATEST MONTH DETECTION
+    ========================= */
+
     let latest = { y:0, m:0 };
 
     (data.SALES || []).forEach(r => {
@@ -29,12 +33,24 @@ export function buildDashboard(data) {
         `${latest.y}-${String(latest.m).padStart(2,"0")}-01`;
 
     /* =========================
+       DEFAULT END DATE = YESTERDAY
+    ========================= */
+
+    const baseDate = new Date();
+    baseDate.setDate(baseDate.getDate() - 1);
+
+    const latestMonthEnd =
+        `${baseDate.getFullYear()}-${String(baseDate.getMonth()+1).padStart(2,"0")}-${String(baseDate.getDate()).padStart(2,"0")}`;
+
+    /* =========================
        SALES FILTER
     ========================= */
 
     const sales = (data.SALES || []).filter(r => {
 
         const d = buildDate(r);
+
+        if (!d) return false;
 
         if (state.from || state.to){
 
@@ -43,12 +59,13 @@ export function buildDashboard(data) {
 
         } else {
 
-            if (d < latestMonthStart) return false;
-
             const m = monthMapNum[normMonth(r.month)];
             const y = Number(r.year);
 
             if (m !== latest.m || y !== latest.y) return false;
+
+            if (d < latestMonthStart) return false;
+            if (d > latestMonthEnd) return false;
         }
 
         if (state.brand && r.brand !== state.brand) return false;
@@ -69,6 +86,8 @@ export function buildDashboard(data) {
             ? `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`
             : raw;
 
+        if (!d) return false;
+
         if (state.from || state.to){
 
             if (state.from && d < state.from) return false;
@@ -77,8 +96,15 @@ export function buildDashboard(data) {
             return true;
         }
 
-        return d >= latestMonthStart;
+        if (d < latestMonthStart) return false;
+        if (d > latestMonthEnd) return false;
+
+        return true;
     });
+
+    /* =========================
+       KPI + MAPS
+    ========================= */
 
     let gmv = 0;
     let units = 0;
@@ -90,30 +116,34 @@ export function buildDashboard(data) {
 
     sales.forEach(r => {
 
-        const revenue = Number(r.final_amount) || 0;
+        const rev = Number(r.final_amount) || 0;
         const qty = Number(r.qty) || 0;
 
-        gmv += revenue;
+        gmv += rev;
         units += qty;
 
         const brand = r.brand || "UNKNOWN";
 
         if (!brandMap[brand]) {
             brandMap[brand] = {
-                gmv:0, units:0, PPMP:0, SJIT:0, SOR:0
+                gmv:0,
+                units:0,
+                PPMP:0,
+                SJIT:0,
+                SOR:0
             };
         }
 
-        brandMap[brand].gmv += revenue;
+        brandMap[brand].gmv += rev;
         brandMap[brand].units += qty;
 
-        if (r.po_type === "PPMP") brandMap[brand].PPMP += revenue;
-        else if (r.po_type === "SJIT") brandMap[brand].SJIT += revenue;
-        else brandMap[brand].SOR += revenue;
+        if (r.po_type === "PPMP") brandMap[brand].PPMP += rev;
+        else if (r.po_type === "SJIT") brandMap[brand].SJIT += rev;
+        else brandMap[brand].SOR += rev;
 
         const key = buildDate(r);
 
-        salesTrend[key] = (salesTrend[key] || 0) + revenue;
+        salesTrend[key] = (salesTrend[key] || 0) + rev;
         unitsTrend[key] = (unitsTrend[key] || 0) + qty;
     });
 
@@ -127,7 +157,10 @@ export function buildDashboard(data) {
             : raw;
 
         if (!adsTrend[d]){
-            adsTrend[d] = { spend:0, revenue:0 };
+            adsTrend[d] = {
+                spend:0,
+                revenue:0
+            };
         }
 
         adsTrend[d].spend += Number(r.ad_spend) || 0;
@@ -140,6 +173,7 @@ export function buildDashboard(data) {
     let impressions = 0;
 
     ads.forEach(r => {
+
         spend += Number(r.ad_spend) || 0;
         revenue += Number(r.total_revenue) || 0;
         clicks += Number(r.clicks) || 0;
@@ -151,7 +185,15 @@ export function buildDashboard(data) {
     const roi = spend ? revenue / spend : 0;
 
     return {
-        kpi:{ gmv, units, asp, spend, revenue, ctr, roi },
+        kpi:{
+            gmv,
+            units,
+            asp,
+            spend,
+            revenue,
+            ctr,
+            roi
+        },
         charts:{
             sales: cleanTrend(salesTrend),
             units: cleanTrend(unitsTrend),
@@ -160,6 +202,8 @@ export function buildDashboard(data) {
         brandMap
     };
 }
+
+/* ========================= */
 
 function cleanTrend(obj){
 
@@ -174,6 +218,8 @@ function cleanTrend(obj){
     return out;
 }
 
+/* ========================= */
+
 function buildDate(r){
 
     const monthMap = {
@@ -182,8 +228,11 @@ function buildDate(r){
         SEP:"09",OCT:"10",NOV:"11",DEC:"12"
     };
 
-    const dd = String(r.date).padStart(2,"0");
+    const dd = String(r.date || "").padStart(2,"0");
     const mm = monthMap[(r.month || "").toUpperCase().trim()] || "01";
+    const yy = String(r.year || "");
 
-    return `${r.year}-${mm}-${dd}`;
+    if (!yy || !dd) return "";
+
+    return `${yy}-${mm}-${dd}`;
 }
