@@ -1,3 +1,5 @@
+// reports/sjitPlanning/engine.js
+
 import { getData } from "../../core/dataRegistry.js";
 
 export function buildSJITPlanning(){
@@ -8,10 +10,6 @@ export function buildSJITPlanning(){
     const traffic = getData("TRAFFIC") || [];
     const pm = getData("product_master") || [];
 
-    /* =========================
-       UNIQUE STYLE LIST
-    ========================= */
-
     const styleSet = new Set();
 
     orders.forEach(r => styleSet.add(r.style_id));
@@ -19,18 +17,9 @@ export function buildSJITPlanning(){
 
     const styles = Array.from(styleSet);
 
-    /* =========================
-       RETURNS MAP
-    ========================= */
-
     const returnSet = new Set(
         returns.map(r => r.order_line_id)
     );
-
-    /* =========================
-       DAYS CALCULATION
-       🔥 FIXED = current date - 1 day
-    ========================= */
 
     const baseDate = new Date();
     baseDate.setDate(baseDate.getDate() - 1);
@@ -47,9 +36,15 @@ export function buildSJITPlanning(){
 
     const totalDays = currentMonthDays + lastMonthDays;
 
-    /* =========================
-       BUILD DATA
-    ========================= */
+    const NORTH = [
+        "DELHI","HARYANA","PUNJAB","UTTAR PRADESH","RAJASTHAN",
+        "CHANDIGARH","JAMMU AND KASHMIR","UTTARAKHAND","HIMACHAL PRADESH"
+    ];
+
+    const SOUTH = [
+        "KARNATAKA","TAMIL NADU","TELANGANA","ANDHRA PRADESH",
+        "KERALA","PUDUCHERRY"
+    ];
 
     const result = [];
 
@@ -71,12 +66,7 @@ export function buildSJITPlanning(){
 
         const drr = net ? net / totalDays : 0;
 
-        // 🔥 KEEP (NO DELETE)
         const adjDRR = drr * (1 - returnPct);
-
-        /* =========================
-           STOCK
-        ========================= */
 
         let sjitStock = 0;
 
@@ -86,76 +76,64 @@ export function buildSJITPlanning(){
             }
         });
 
-        /* =========================
-           SC
-        ========================= */
-
         const sc = drr ? sjitStock / drr : 0;
-
-        /* =========================
-           SHIPMENT
-        ========================= */
 
         const target45 = drr * 45;
 
         let shipment = target45 - sjitStock;
-
         if (shipment < 0) shipment = 0;
-
-        /* =========================
-           RECALL
-           🔥 90D target
-        ========================= */
 
         let recall = 0;
 
         if (sc >= 90){
-
             const target90 = drr * 90;
-
             recall = sjitStock - target90;
-
             if (recall < 0) recall = 0;
         }
-
-        /* =========================
-           META
-        ========================= */
 
         const p = pm.find(x => x.style_id == style_id) || {};
         const t = traffic.find(x => x.style_id == style_id) || {};
 
         /* =========================
-           FLAGS
+           PPMP / SJIT SHARE
         ========================= */
 
-        let remark = "";
+        let ppmp = 0;
+        let sjitOrd = 0;
 
-        if (net === 0 && sjitStock > 0){
-            remark = "HIGH RISK";
-        }
+        o.forEach(r => {
+            const po = (r.po_type || "").toUpperCase();
+
+            if (po.includes("PPMP")) ppmp++;
+            else sjitOrd++;
+        });
+
+        const ppmpShare = gross ? (ppmp / gross) : 0;
+        const sjitShare = gross ? (sjitOrd / gross) : 0;
 
         /* =========================
-           PRIORITY
+           ZONE
         ========================= */
 
-        let priority = "LOW";
+        let north = 0;
+        let south = 0;
 
-        if (remark === "HIGH RISK") priority = "HIGH";
-        else if (shipment > 500) priority = "HIGH";
-        else if (shipment > 200) priority = "MEDIUM";
-        else if (recall > 200) priority = "MEDIUM";
+        o.forEach(r => {
 
-        /* =========================
-           ACTION
-        ========================= */
+            const st = (r.state || "").toUpperCase().trim();
 
-        let action = "";
+            if (NORTH.includes(st)) north++;
+            else if (SOUTH.includes(st)) south++;
+            else {
+                north += 0.5;
+                south += 0.5;
+            }
+        });
 
-        if (remark === "HIGH RISK") action = "STOP BUY";
-        else if (shipment > 0) action = "REPLENISH";
-        else if (recall > 0) action = "REDUCE STOCK";
-        else if (returnPct > 0.3) action = "FIX PRODUCT";
+        let zone = "Balanced";
+
+        if (north > south) zone = "North";
+        if (south > north) zone = "South";
 
         result.push({
             style_id,
@@ -169,6 +147,10 @@ export function buildSJITPlanning(){
             return_pct: returnPct,
             net,
 
+            ppmp_share: ppmpShare,
+            sjit_share: sjitShare,
+            zone,
+
             drr,
             adj_drr: adjDRR,
 
@@ -176,11 +158,7 @@ export function buildSJITPlanning(){
             sc,
 
             shipment: Math.round(shipment),
-            recall: Math.round(recall),
-
-            priority,
-            action,
-            remark
+            recall: Math.round(recall)
         });
     });
 
